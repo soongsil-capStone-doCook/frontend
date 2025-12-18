@@ -1,0 +1,1313 @@
+openapi: 3.0.0
+info:
+  title: Fridge & Recipe Service API
+  version: 1.0.0
+  description: 냉장고 재료 관리 및 레시피 추천 서비스 API 명세서 (전체 버전)
+
+paths:
+  # --- Auth 관련 API ---
+  /auth/login/kakao:
+    post:
+      summary: 카카오 로그인 및 회원가입
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - kakaoAccessToken
+              properties:
+                kakaoAccessToken:
+                  type: string
+                  description: 카카오에서 받은 액세스 토큰
+                  example: "k9d8f7s6d5f4..."
+            example:
+              kakaoAccessToken: "k9d8f7s6d5f4..."
+      responses:
+        '200':
+          description: 로그인 성공 및 토큰 발급
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1..."
+                  refreshToken:
+                    type: string
+                    example: "d7s8f9a6s..."
+                  expiresIn:
+                    type: integer
+                    example: 3600
+                  isNewMember:
+                    type: boolean
+                    description: true면 추가 정보 입력 페이지로 이동 유도
+                    example: false
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      nickname:
+                        type: string
+                        example: "홍길동"
+                      profileImage:
+                        type: string
+                        format: uri
+                        example: "http://k.kakaocdn.net/..."
+              example:
+                accessToken: "eyJhbGciOiJIUzI1..."
+                refreshToken: "d7s8f9a6s..."
+                expiresIn: 3600
+                isNewMember: false
+                user:
+                  id: 1
+                  nickname: "홍길동"
+                  profileImage: "http://k.kakaocdn.net/..."
+        '400':
+          description: Bad Request - Access Token이 만료되었거나 유효하지 않음
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired access token"
+  /auth/refresh:
+    post:
+      summary: 토큰 재발급
+      description: Access Token이 만료되었을 때 Refresh Token을 사용하여 새로운 토큰을 발급
+      tags:
+        - auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 새로운 액세스 토큰 발급 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    example: "new_access_token..."
+                  expiresIn:
+                    type: integer
+                    example: 3600
+              example:
+                accessToken: "new_access_token..."
+                expiresIn: 3600
+        '400':
+          description: Bad Request - Refresh Token이 유효하지 않음
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid refresh token"
+  /auth/logout:
+    post:
+      summary: 로그아웃
+      description: 현재 사용자 로그아웃 및 토큰 무효화
+      tags:
+        - auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 로그아웃 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "로그아웃되었습니다."
+              example:
+                message: "로그아웃되었습니다."
+        '401':
+          description: Unauthorized - 인증되지 않은 사용자
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized"
+
+  # --- Members 관련 API ---
+  /users/me:
+    get:
+      summary: 내 정보 조회
+      tags:
+        - members
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 프로필 정보 반환 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+                  nickname:
+                    type: string
+                    example: "홍길동"
+                  email:
+                    type: string
+                    format: email
+                    description: 카카오 계정 이메일 (동의 시)
+                    example: "hong@daum.net"
+                  allergies:
+                    type: array
+                    items:
+                      type: string
+                    example: ["새우", "땅콩"]
+                  dislikedIngredients:
+                    type: array
+                    items:
+                      type: string
+                    example: ["오이", "고수"]
+                  profileImage:
+                    type: string
+                    format: uri
+                    example: "url..."
+              example:
+                userId: 1
+                nickname: "홍길동"
+                email: "hong@daum.net"
+                allergies: 
+                  - "새우"
+                  - "땅콩"
+                dislikedIngredients: 
+                  - "오이"
+                  - "고수"
+                profileImage: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /users/me/preferences:
+    patch:
+      summary: 건강 정보 및 기호 수정
+      tags:
+        - members
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                allergies:
+                  type: array
+                  items:
+                    type: string
+                  description: 알레르기 배열
+                dislikedIngredients:
+                  type: array
+                  items:
+                    type: string
+                  description: 좋아하지 않는 음식 배열
+            example:
+              allergies: ["우유", "대두"]
+              dislikedIngredients: ["오이"]
+      responses:
+        '200':
+          description: 수정 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "COMPLETE"
+              example:
+                status: "COMPLETE"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /users/me/scraps:
+    get:
+      summary: 찜한 레시피 목록 조회
+      tags:
+        - members
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 찜한 레시피 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    favoriteId:
+                      type: integer
+                      description: 찜하기 고유 ID (삭제 요청 시 유용)
+                      example: 10
+                    recipeId:
+                      type: integer
+                      example: 501
+                    title:
+                      type: string
+                      example: "돼지고기 김치찌개"
+                    thumbnail:
+                      type: string
+                      format: uri
+                      example: "http://..."
+                    cookTime:
+                      type: string
+                      example: "30분"
+                    difficulty:
+                      type: string
+                      example: "중급"
+                    savedAt:
+                      type: string
+                      format: date-time
+                      description: 언제 찜했는지 (정렬용)
+                      example: "2023-10-27T10:00:00Z"
+              example:
+                - favoriteId: 10
+                  recipeId: 501
+                  title: "돼지고기 김치찌개"
+                  thumbnail: "http://..."
+                  cookTime: "30분"
+                  difficulty: "중급"
+                  savedAt: "2023-10-27T10:00:00Z"
+                - favoriteId: 12
+                  recipeId: 505
+                  title: "김치 제육볶음"
+                  thumbnail: "http://..."
+                  cookTime: "20분"
+                  difficulty: "초급"
+                  savedAt: "2023-10-26T15:30:00Z"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # --- Fridge 관련 API ---
+  /fridge:
+    get:
+      summary: 냉장고 재료 목록 조회
+      tags:
+        - fridge
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 냉장고 재료 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 101
+                    name:
+                      type: string
+                      example: "계란"
+                    quantity:
+                      type: string
+                      example: "5개"
+                    category:
+                      type: string
+                      example: "신선식품"
+                    expiryDate:
+                      type: string
+                      format: date
+                      example: "2025-11-10"
+                    inputMethod:
+                      type: string
+                      enum: [OCR, MANUAL]
+                      description: OCR 또는 MANUAL
+                      example: "OCR"
+              example:
+                - id: 101
+                  name: "계란"
+                  quantity: "5개"
+                  category: "신선식품"
+                  expiryDate: "2025-11-10"
+                  inputMethod: "OCR"
+                - id: 102
+                  name: "우유"
+                  quantity: "1L"
+                  category: "유제품"
+                  expiryDate: "2025-10-30"
+                  inputMethod: "MANUAL"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: 재료 수동 추가
+      tags:
+        - fridge
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - quantity
+                - category
+              properties:
+                name:
+                  type: string
+                  example: "돼지고기 목살"
+                quantity:
+                  type: string
+                  example: "300g"
+                expiryDate:
+                  type: string
+                  format: date
+                  description: 선택 사항
+                  example: "2025-11-05"
+                category:
+                  type: string
+                  example: "육류"
+            example:
+              name: "돼지고기 목살"
+              quantity: "300g"
+              expiryDate: "2025-11-05"
+              category: "육류"
+      responses:
+        '200':
+          description: 재료 추가 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: 생성된 재료에 대한 ID
+                    example: 101
+                  name:
+                    type: string
+                    example: "계란"
+                  quantity:
+                    type: string
+                    example: "5개"
+                  category:
+                    type: string
+                    example: "신선식품"
+                  expiryDate:
+                    type: string
+                    format: date
+                    example: "2025-11-10"
+                  inputMethod:
+                    type: string
+                    enum: [OCR, MANUAL]
+                    description: OCR 또는 MANUAL
+                    example: "OCR"
+              example:
+                id: 101
+                name: "계란"
+                quantity: "5개"
+                category: "신선식품"
+                expiryDate: "2025-11-10"
+                inputMethod: "OCR"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /fridge/ocr:
+    post:
+      summary: OCR 영수증/사진 인식 요청
+      tags:
+        - fridge
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 영수증 사진
+      responses:
+        '200':
+          description: 사진 분석 완료 및 임시 재료 리스트 반환
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recognizedId:
+                    type: string
+                    example: "temp_12345"
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "콩나물"
+                        confidence:
+                          type: number
+                          format: float
+                          example: 0.98
+              example:
+                recognizedId: "temp_12345"
+                items:
+                  - name: "콩나물"
+                    confidence: 0.98
+                  - name: "두부"
+                    confidence: 0.95
+                  - name: "삼겹살"
+                    confidence: 0.88
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /fridge/{ingredientId}:
+    patch:
+      summary: 재료 수정
+      tags:
+        - fridge
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ingredientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 101
+                name:
+                  type: string
+                  example: "계란"
+                quantity:
+                  type: string
+                  example: "5개"
+                category:
+                  type: string
+                  example: "신선식품"
+                expiryDate:
+                  type: string
+                  format: date
+                  example: "2025-11-10"
+                inputMethod:
+                  type: string
+                  enum: [OCR, MANUAL]
+                  description: OCR 또는 MANUAL
+                  example: "OCR"
+            example:
+              id: 101
+              name: "계란"
+              quantity: "5개"
+              category: "신선식품"
+              expiryDate: "2025-11-10"
+              inputMethod: "OCR"
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 101
+                  name:
+                    type: string
+                    example: "계란"
+                  quantity:
+                    type: string
+                    example: "5개"
+                  category:
+                    type: string
+                    example: "신선식품"
+                  expiryDate:
+                    type: string
+                    format: date
+                    example: "2025-11-10"
+                  inputMethod:
+                    type: string
+                    enum: [OCR, MANUAL]
+                    description: OCR 또는 MANUAL
+                    example: "OCR"
+              example:
+                id: 101
+                name: "계란"
+                quantity: "5개"
+                category: "신선식품"
+                expiryDate: "2025-11-10"
+                inputMethod: "OCR"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      summary: 재료 삭제
+      tags:
+        - fridge
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ingredientId
+          in: path
+          required: true
+          description: 재료 아이디
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 삭제 완료
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # --- Recipes 관련 API ---
+  /recipes/recommend/fridge:
+    post:
+      summary: 맞춤 레시피 추천 (내 냉장고 기반)
+      tags:
+        - recipes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mustInclude:
+                  type: array
+                  items:
+                    type: string
+                  example: ["돼지고기", "김치"]
+            example:
+              mustInclude: ["돼지고기", "김치"]
+      responses:
+        '200':
+          description: 추천 목록 반환 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    recipeId:
+                      type: integer
+                      example: 501
+                    title:
+                      type: string
+                      example: "돼지고기 김치찌개"
+                    thumbnail:
+                      type: string
+                      format: uri
+                      example: "http://..."
+                    matchRate:
+                      type: number
+                      format: float
+                      description: 적합도 (유사도 점수)
+                      example: 98.5
+                    missingIngredients:
+                      type: array
+                      items:
+                        type: string
+                      description: 부족한 재료 안내
+                      example: ["대파"]
+                    cookTime:
+                      type: string
+                      example: "30분"
+                    difficulty:
+                      type: string
+                      example: "중급"
+              example:
+                - recipeId: 401
+                  title: "돼지고기 김치찌개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 98.5
+                  missingIngredients: ["대파"]
+                  cookTime: "30분"
+                  difficulty: "중급"
+                - recipeId: 402
+                  title: "김치 제육볶음"
+                  thumbnail: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop"
+                  matchRate: 95.0
+                  missingIngredients: []
+                  cookTime: "20분"
+                  difficulty: "초급"
+                - recipeId: 403
+                  title: "돼지고기 수육"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 97.2
+                  missingIngredients: ["마늘"]
+                  cookTime: "50분"
+                  difficulty: "중급"
+                - recipeId: 404
+                  title: "김치볶음밥"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  matchRate: 89.5
+                  missingIngredients: []
+                  cookTime: "15분"
+                  difficulty: "초급"
+                - recipeId: 405
+                  title: "돼지고기 두루치기"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 91.8
+                  missingIngredients: ["고추장"]
+                  cookTime: "25분"
+                  difficulty: "중급"
+                - recipeId: 406
+                  title: "김치전"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 86.3
+                  missingIngredients: ["밀가루"]
+                  cookTime: "20분"
+                  difficulty: "초급"
+                - recipeId: 407
+                  title: "돼지고기 찜"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 94.1
+                  missingIngredients: []
+                  cookTime: "60분"
+                  difficulty: "고급"
+                - recipeId: 408
+                  title: "김치 부침개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 88.7
+                  missingIngredients: ["계란"]
+                  cookTime: "18분"
+                  difficulty: "초급"
+                - recipeId: 409
+                  title: "돼지고기 스튜"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 92.5
+                  missingIngredients: ["양파"]
+                  cookTime: "45분"
+                  difficulty: "중급"
+                - recipeId: 410
+                  title: "김치국수"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 90.0
+                  missingIngredients: []
+                  cookTime: "12분"
+                  difficulty: "초급"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /recipes/recommend/missing:
+    get:
+      summary: 부족한 재료 기반 추천
+      description: 쿼리 파라미터로 부족한 재료 허용 개수 지정
+      tags:
+        - recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: 부족한 재료 허용 개수
+          schema:
+            type: integer
+            example: 2
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    recipeId:
+                      type: integer
+                      example: 501
+                    title:
+                      type: string
+                      example: "돼지고기 김치찌개"
+                    thumbnail:
+                      type: string
+                      format: uri
+                      example: "http://..."
+                    matchRate:
+                      type: number
+                      format: float
+                      description: 적합도 (유사도 점수)
+                      example: 98.5
+                    missingIngredients:
+                      type: array
+                      items:
+                        type: string
+                      description: 부족한 재료 안내
+                      example: ["대파"]
+                    cookTime:
+                      type: string
+                      example: "30분"
+                    difficulty:
+                      type: string
+                      example: "중급"
+              example:
+                - recipeId: 301
+                  title: "돼지고기 김치찌개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 98.5
+                  missingIngredients: ["대파"]
+                  cookTime: "30분"
+                  difficulty: "중급"
+                - recipeId: 302
+                  title: "김치 제육볶음"
+                  thumbnail: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop"
+                  matchRate: 92.0
+                  missingIngredients: []
+                  cookTime: "20분"
+                  difficulty: "초급"
+                - recipeId: 303
+                  title: "된장찌개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 85.3
+                  missingIngredients: ["두부", "호박"]
+                  cookTime: "35분"
+                  difficulty: "초급"
+                - recipeId: 304
+                  title: "계란볶음밥"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  matchRate: 96.8
+                  missingIngredients: []
+                  cookTime: "10분"
+                  difficulty: "초급"
+                - recipeId: 305
+                  title: "닭볶음탕"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  matchRate: 88.2
+                  missingIngredients: ["당근"]
+                  cookTime: "40분"
+                  difficulty: "중급"
+                - recipeId: 306
+                  title: "오므라이스"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  matchRate: 91.5
+                  missingIngredients: ["계란"]
+                  cookTime: "25분"
+                  difficulty: "중급"
+                - recipeId: 307
+                  title: "순두부찌개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 87.9
+                  missingIngredients: []
+                  cookTime: "20분"
+                  difficulty: "초급"
+                - recipeId: 308
+                  title: "잡채"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  matchRate: 83.4
+                  missingIngredients: ["당면", "시금치"]
+                  cookTime: "30분"
+                  difficulty: "중급"
+                - recipeId: 309
+                  title: "부대찌개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 90.7
+                  missingIngredients: ["햄"]
+                  cookTime: "25분"
+                  difficulty: "초급"
+                - recipeId: 310
+                  title: "제육볶음"
+                  thumbnail: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop"
+                  matchRate: 95.6
+                  missingIngredients: []
+                  cookTime: "22분"
+                  difficulty: "초급"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /recipes/recommend/liked:
+    get:
+      summary: 찜 기반 유사 레시피 추천
+      tags:
+        - recipes
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    recipeId:
+                      type: integer
+                      example: 501
+                    title:
+                      type: string
+                      example: "돼지고기 김치찌개"
+                    thumbnail:
+                      type: string
+                      format: uri
+                      example: "http://..."
+                    matchRate:
+                      type: number
+                      format: float
+                      description: 적합도 (유사도 점수)
+                      example: 98.5
+                    missingIngredients:
+                      type: array
+                      items:
+                        type: string
+                      description: 부족한 재료 안내
+                      example: ["대파"]
+                    cookTime:
+                      type: string
+                      example: "30분"
+                    difficulty:
+                      type: string
+                      example: "중급"
+              example:
+                - recipeId: 501
+                  title: "돼지고기 김치찌개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 98.5
+                  missingIngredients: ["대파"]
+                  cookTime: "30분"
+                  difficulty: "중급"
+                - recipeId: 502
+                  title: "김치 제육볶음"
+                  thumbnail: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop"
+                  matchRate: 95.2
+                  missingIngredients: []
+                  cookTime: "20분"
+                  difficulty: "초급"
+                - recipeId: 503
+                  title: "크림 파스타"
+                  thumbnail: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop"
+                  matchRate: 88.7
+                  missingIngredients: ["파마산 치즈"]
+                  cookTime: "25분"
+                  difficulty: "중급"
+                - recipeId: 504
+                  title: "불고기 덮밥"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  matchRate: 92.3
+                  missingIngredients: []
+                  cookTime: "15분"
+                  difficulty: "초급"
+                - recipeId: 505
+                  title: "연어 스테이크"
+                  thumbnail: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop"
+                  matchRate: 85.6
+                  missingIngredients: ["레몬", "올리브오일"]
+                  cookTime: "40분"
+                  difficulty: "고급"
+                - recipeId: 506
+                  title: "된장찌개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  matchRate: 90.1
+                  missingIngredients: ["두부"]
+                  cookTime: "35분"
+                  difficulty: "초급"
+                - recipeId: 507
+                  title: "마르게리타 피자"
+                  thumbnail: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=300&h=200&fit=crop"
+                  matchRate: 87.4
+                  missingIngredients: ["모짜렐라 치즈"]
+                  cookTime: "45분"
+                  difficulty: "중급"
+                - recipeId: 508
+                  title: "치킨 샐러드"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  matchRate: 93.8
+                  missingIngredients: []
+                  cookTime: "10분"
+                  difficulty: "초급"
+                - recipeId: 509
+                  title: "라멘"
+                  thumbnail: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=200&fit=crop"
+                  matchRate: 81.2
+                  missingIngredients: ["계란", "파"]
+                  cookTime: "50분"
+                  difficulty: "고급"
+                - recipeId: 510
+                  title: "비빔밥"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  matchRate: 96.5
+                  missingIngredients: []
+                  cookTime: "20분"
+                  difficulty: "초급"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /recipes/search:
+    get:
+      summary: 레시피 검색
+      tags:
+        - recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          description: 검색어
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: 정렬 기준
+          schema:
+            type: string
+            enum: [latest, rating, match]
+        - name: excludeAllergy
+          in: query
+          description: 알레르기 필터 유무
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: 레시피 검색 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    recipeId:
+                      type: integer
+                      example: 501
+                    title:
+                      type: string
+                      example: "돼지고기 김치찌개"
+                    thumbnail:
+                      type: string
+                      format: uri
+                      example: "http://..."
+                    missingIngredients:
+                      type: array
+                      items:
+                        type: string
+                      description: 부족한 재료 안내
+                      example: ["대파"]
+                    cookTime:
+                      type: string
+                      example: "30분"
+                    difficulty:
+                      type: string
+                      example: "중급"
+              example:
+                - recipeId: 601
+                  title: "돼지고기 김치찌개"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  missingIngredients: ["대파"]
+                  cookTime: "30분"
+                  difficulty: "중급"
+                - recipeId: 602
+                  title: "김치 제육볶음"
+                  thumbnail: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop"
+                  missingIngredients: []
+                  cookTime: "20분"
+                  difficulty: "초급"
+                - recipeId: 603
+                  title: "크림 리소토"
+                  thumbnail: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop"
+                  missingIngredients: ["아르보리오 쌀"]
+                  cookTime: "35분"
+                  difficulty: "중급"
+                - recipeId: 604
+                  title: "떡볶이"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  missingIngredients: []
+                  cookTime: "15분"
+                  difficulty: "초급"
+                - recipeId: 605
+                  title: "초밥 세트"
+                  thumbnail: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=200&fit=crop"
+                  missingIngredients: ["생선회", "와사비"]
+                  cookTime: "60분"
+                  difficulty: "고급"
+                - recipeId: 606
+                  title: "치킨 커리"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  missingIngredients: ["커리 파우더"]
+                  cookTime: "40분"
+                  difficulty: "중급"
+                - recipeId: 607
+                  title: "새우 볶음밥"
+                  thumbnail: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"
+                  missingIngredients: []
+                  cookTime: "25분"
+                  difficulty: "초급"
+                - recipeId: 608
+                  title: "스파게티 카르보나라"
+                  thumbnail: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop"
+                  missingIngredients: ["베이컨", "계란"]
+                  cookTime: "20분"
+                  difficulty: "중급"
+                - recipeId: 609
+                  title: "된장국"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  missingIngredients: []
+                  cookTime: "10분"
+                  difficulty: "초급"
+                - recipeId: 610
+                  title: "갈비탕"
+                  thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
+                  missingIngredients: ["소갈비"]
+                  cookTime: "90분"
+                  difficulty: "고급"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /recipes/{recipeId}:
+    get:
+      summary: 레시피 상세 조회
+      tags:
+        - recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 상세 정보 반환 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recipeId:
+                    type: integer
+                    example: 501
+                  title:
+                    type: string
+                    example: "돼지고기 김치찌개"
+                  description:
+                    type: string
+                    example: "한국인의 소울푸드..."
+                  servings:
+                    type: string
+                    example: "2인분"
+                  cookTime:
+                    type: string
+                    example: "30분"
+                  difficulty:
+                    type: string
+                    example: "중급"
+                  ingredients:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "돼지고기"
+                        amount:
+                          type: string
+                          example: "200g"
+                        type:
+                          type: string
+                          example: "주재료"
+                  steps:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        order:
+                          type: integer
+                          example: 1
+                        content:
+                          type: string
+                          example: "김치와 고기를 썬다."
+                        imageUrl:
+                          type: string
+                          format: uri
+                          example: "http://..."
+                  isScrapped:
+                    type: boolean
+                    description: 사용자가 찜했는지 여부
+                    example: true
+              example:
+                recipeId: 501
+                title: "돼지고기 김치찌개"
+                description: "한국인의 소울푸드..."
+                servings: "2인분"
+                cookTime: "30분"
+                difficulty: "중급"
+                ingredients:
+                  - name: "돼지고기"
+                    amount: "200g"
+                    type: "주재료"
+                  - name: "김치"
+                    amount: "1/4포기"
+                    type: "주재료"
+                  - name: "대파"
+                    amount: "1대"
+                    type: "부재료"
+                steps:
+                  - order: 1
+                    content: "김치와 고기를 썬다."
+                    imageUrl: "http://..."
+                  - order: 2
+                    content: "냄비에 기름을 두르고 볶는다."
+                    imageUrl: "http://..."
+                isScrapped: true
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /recipes/{recipeId}/scrap:
+    post:
+      summary: 찜하기
+      tags:
+        - recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          description: 레시피id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 찜 등록 성공
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      summary: 찜 취소
+      tags:
+        - recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          description: 레시피id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 찜 해제 성공
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT 토큰을 Bearer 형식으로 전달
