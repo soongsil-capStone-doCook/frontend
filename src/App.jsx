@@ -7,6 +7,7 @@ import Search from "./pages/Search/Search";
 import MyPage from "./pages/MyPage/MyPage";
 import Login from "./pages/Login/Login";
 import KakaoCallback from "./pages/Login/KakaoCallback";
+import Onboarding from "./pages/Login/Onboarding";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="mypage" element={<MyPage />} />
         <Route path="login" element={<Login />} />
         <Route path="login/kakao/callback" element={<KakaoCallback />} />
+        <Route path="onboarding" element={<Onboarding />} />
       </Route>
     </Routes>
   );

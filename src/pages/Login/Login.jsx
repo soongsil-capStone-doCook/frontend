@@ -37,36 +37,50 @@ const Login = () => {
     // redirectUri는 카카오 개발자 콘솔에 등록된 URI와 정확히 일치해야 함
     const redirectUri = `${window.location.origin}/login/kakao/callback`;
 
-    // authorize()는 리다이렉트를 수행하므로, 콜백 페이지에서 처리합니다
+    // authorize()는 리다이렉트를 수행하므로, 콜백 페이지에서 처리
     window.Kakao.Auth.authorize({
       redirectUri: redirectUri,
     });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
-          로그인
-        </h1>
-
-        <div className="flex flex-col gap-4">
-          <p className="text-center text-gray-500 mb-4">
+    <div className="min-h-screen bg-white pb-20 flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        {/* 로그인 헤더 */}
+        <div className="mb-12 text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1.5 tracking-tight">
+            로그인
+          </h1>
+          <p className="text-sm text-gray-500 font-medium">
             서비스 이용을 위해 로그인해주세요
           </p>
+        </div>
 
-          {/* 카카오 로그인 버튼 (공식 컬러 #FEE500) */}
+        {/* 로그인 박스 */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          {/* 카카오 로그인 버튼 */}
           <button
             onClick={handleKakaoLogin}
-            className="w-full bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] font-bold py-3.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
+            className="w-full bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-gray-900 font-bold py-4 px-6 rounded-xl 
+            flex items-center justify-center gap-3 shadow-md hover:shadow-lg"
           >
-            {/* 카카오 심볼 아이콘 (SVG) */}
-            <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
+            {/* 카카오 심볼 아이콘 */}
+            <svg
+              viewBox="0 0 32 32"
+              width="24"
+              height="24"
+              fill="currentColor"
+              className="flex-shrink-0"
+            >
               <path d="M16 4C8.832 4 3 8.604 3 14.28c0 3.73 2.536 7.025 6.36 8.797l-1.306 4.81c-.13.48.44.857.818.59l5.59-3.95c.502.05 1.015.074 1.538.074 7.168 0 13-4.604 13-10.28C29 8.604 23.168 4 16 4z" />
             </svg>
-            카카오로 시작하기
+            <span className="text-base">카카오로 시작하기</span>
           </button>
         </div>
+
+        <p className="text-xs text-gray-400 text-center mt-6">
+          카카오 계정으로 간편하게 시작하세요
+        </p>
       </div>
     </div>
   );

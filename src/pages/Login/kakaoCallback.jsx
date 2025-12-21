@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authAPI } from "../../api/auth";
+import { useUserStore } from "../../store/useUserStore";
 
 const KakaoCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { setIsLoggined, setUser } = useUserStore();
 
   // URL에서 code 추출
   const code = searchParams.get("code");
@@ -30,7 +32,7 @@ const KakaoCallback = () => {
 
       try {
         // 3. 백엔드로 code 전송
-        const response = await authAPI.kakaoLogin(code);
+        const response = await authAPI.kakaoLogin(code); //!
 
         // 4. 응답에서 데이터 추출
         const data = response.data;
@@ -40,6 +42,9 @@ const KakaoCallback = () => {
         // 5. 토큰 저장
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
+
+        setIsLoggined(true);
+        setUser(data.user);
 
         // 6. 페이지 이동
         if (data.isNewMember) {
