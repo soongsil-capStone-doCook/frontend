@@ -26,6 +26,6 @@ export const recipeAPI = {
 
   // 찜 기반 레시피 추천 (메인 페이지용)
   getLikedRecommendations: () => {
-    return axiosInstance.get("/recipes/recommend/scrap");
+    return axiosInstance.get("/recipes/recommend/liked");
   },
 };
