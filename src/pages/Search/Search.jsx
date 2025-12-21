@@ -9,7 +9,7 @@ import { userAPI } from "../../api/user";
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [keyword, setKeyword] = useState("");
-  const [keywords, setKeywords] = useState([]); // 다중 키워드 배열
+  const [keywords, setKeywords] = useState([]); // 다중 키워드 배열: { text: string, type: 'include' | 'exclude' }
   const [recipes, setRecipes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sortBy, setSortBy] = useState("latest");
@@ -44,7 +44,16 @@ const Search = () => {
   useEffect(() => {
     const urlKeyword = searchParams.get("keyword");
     if (urlKeyword) {
-      const keywordArray = urlKeyword.split("+").filter((k) => k.trim());
+      const keywordArray = urlKeyword
+        .split("+")
+        .filter((k) => k.trim())
+        .map((kw) => {
+          const isExclude = kw.startsWith("-");
+          return {
+            text: isExclude ? kw.slice(1) : kw,
+            type: isExclude ? "exclude" : "include",
+          };
+        });
       setKeywords(keywordArray);
       handleSearch(keywordArray);
     }
@@ -57,9 +66,19 @@ const Search = () => {
       e.preventDefault();
       const trimmedKeyword = keyword.trim();
 
+      // -로 시작하면 제외 키워드
+      const isExclude = trimmedKeyword.startsWith("-");
+      const keywordText = isExclude ? trimmedKeyword.slice(1) : trimmedKeyword;
+
       // 중복 체크
-      if (!keywords.includes(trimmedKeyword)) {
-        const newKeywords = [...keywords, trimmedKeyword];
+      if (!keywords.some((kw) => kw.text === keywordText)) {
+        const newKeywords = [
+          ...keywords,
+          {
+            text: keywordText,
+            type: isExclude ? "exclude" : "include",
+          },
+        ];
         setKeywords(newKeywords);
         setKeyword("");
 
@@ -90,10 +109,18 @@ const Search = () => {
       setIsLoading(true);
       setHasSearched(true);
 
-      // 다중 키워드를 "+" 로 연결
-      const combinedKeyword = searchKeywords.join("+");
+      // 포함/제외 키워드 분리
+      const includeKeywords = searchKeywords
+        .filter((kw) => kw.type === "include")
+        .map((kw) => kw.text);
+      const excludeKeywords = searchKeywords
+        .filter((kw) => kw.type === "exclude")
+        .map((kw) => kw.text);
 
-      const response = await recipeAPI.searchRecipes(combinedKeyword, {
+      // 다중 키워드를 "+" 로 연결 (포함 키워드만)
+      const combinedKeyword = includeKeywords.join("+");
+
+      const response = await recipeAPI.searchRecipes(combinedKeyword || "*", {
         sort: sortBy,
         excludeAllergy: excludeAllergy,
       });
@@ -110,25 +137,37 @@ const Search = () => {
             recipe.ingredients ? recipe.ingredients.join(" ") : ""
           }`.toLowerCase();
 
-          // 모든 키워드가 포함되어야 함
-          return searchKeywords.every((kw) =>
+          // 모든 포함 키워드가 포함되어야 함
+          const hasAllIncludes =
+            includeKeywords.length === 0 ||
+            includeKeywords.every((kw) =>
+              searchText.includes(kw.toLowerCase())
+            );
+
+          // 제외 키워드가 하나라도 포함되면 제외
+          const hasAnyExcludes = excludeKeywords.some((kw) =>
             searchText.includes(kw.toLowerCase())
           );
+
+          return hasAllIncludes && !hasAnyExcludes;
         });
       }
 
       setRecipes(filteredRecipes);
 
-      // 최근 검색어 저장
+      // 최근 검색어 저장 (포함+제외 키워드 형식)
+      const searchString = searchKeywords
+        .map((kw) => (kw.type === "exclude" ? `-${kw.text}` : kw.text))
+        .join("+");
       const newRecentSearches = [
-        combinedKeyword,
-        ...recentSearches.filter((s) => s !== combinedKeyword),
+        searchString,
+        ...recentSearches.filter((s) => s !== searchString),
       ].slice(0, 10);
       setRecentSearches(newRecentSearches);
       localStorage.setItem("recentSearches", JSON.stringify(newRecentSearches));
 
       // URL 업데이트
-      setSearchParams({ keyword: combinedKeyword });
+      setSearchParams({ keyword: searchString });
     } catch (error) {
       console.error("검색 실패:", error);
       setRecipes([]);
@@ -139,7 +178,16 @@ const Search = () => {
 
   // 최근 검색어 클릭
   const handleRecentSearchClick = (search) => {
-    const keywordArray = search.split("+").filter((k) => k.trim());
+    const keywordArray = search
+      .split("+")
+      .filter((k) => k.trim())
+      .map((kw) => {
+        const isExclude = kw.startsWith("-");
+        return {
+          text: isExclude ? kw.slice(1) : kw,
+          type: isExclude ? "exclude" : "include",
+        };
+      });
     setKeywords(keywordArray);
     setKeyword("");
     handleSearch(keywordArray);
@@ -189,12 +237,22 @@ const Search = () => {
                 {keywords.map((kw, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-1 bg-slate-600 text-white px-3 py-1.5 rounded-full text-sm font-medium"
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
+                      kw.type === "exclude"
+                        ? "bg-red-600 text-white"
+                        : "bg-slate-600 text-white"
+                    }`}
                   >
-                    <span>{kw}</span>
+                    <span>
+                      {kw.type === "exclude" ? `-${kw.text}` : kw.text}
+                    </span>
                     <button
                       onClick={() => removeKeyword(index)}
-                      className="hover:bg-slate-700 rounded-full p-0.5 transition-colors"
+                      className={`rounded-full p-0.5 transition-colors ${
+                        kw.type === "exclude"
+                          ? "hover:bg-red-700"
+                          : "hover:bg-slate-700"
+                      }`}
                     >
                       <HiX size={14} />
                     </button>
@@ -212,8 +270,8 @@ const Search = () => {
                 onKeyDown={handleKeyPress}
                 placeholder={
                   keywords.length > 0
-                    ? "재료를 더 추가하세요 (스페이스바)"
-                    : "재료를 입력하세요 (스페이스바로 추가)"
+                    ? "재료 입력 (스페이스바, -제외)"
+                    : "재료 입력 (스페이스바로 추가, -제외)"
                 }
                 className="w-full pl-12 pr-24 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-slate-500 transition-colors text-base"
               />
@@ -320,7 +378,13 @@ const Search = () => {
           <div>
             <div className="mb-4">
               <h2 className="text-lg font-bold text-gray-900">
-                '{keywords.join(" + ")}' 검색 결과
+                '
+                {keywords
+                  .map((kw) =>
+                    kw.type === "exclude" ? `-${kw.text}` : kw.text
+                  )
+                  .join(" + ")}
+                ' 검색 결과
                 {!isLoading && (
                   <span className="text-slate-600">({recipes.length})</span>
                 )}
