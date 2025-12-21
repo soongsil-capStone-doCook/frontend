@@ -179,7 +179,7 @@ const RecipeDetail = () => {
               <div>
                 <p className="text-xs text-gray-500">인분</p>
                 <p className="text-sm font-bold text-gray-900">
-                  {recipe.servings}인분
+                  {recipe.servings}
                 </p>
               </div>
             </div>
