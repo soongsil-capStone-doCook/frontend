@@ -27,11 +27,12 @@ const OnboardingButton = ({ step, formData, onNext }) => {
       <button
         onClick={onNext}
         disabled={!isComplete}
-        className={`group font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center gap-2 ${
-          isComplete
-            ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
-            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-        }`}
+        className={`group font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-lg 
+          transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center gap-2 ${
+            isComplete
+              ? "bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
       >
         <span>다음</span>
         <FaChevronRight

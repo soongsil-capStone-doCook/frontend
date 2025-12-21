@@ -60,7 +60,7 @@ const Onboarding = () => {
         {/* 온보딩 내용 구현 */}
         {step === 1 && (
           <div>
-            <h1 className="flex justify-center text-2xl font-bold mb-6">
+            <h1 className="text-center text-3xl font-extrabold mb-8 text-gray-900 drop-shadow-sm leading-tight break-keep max-w-md mx-auto tracking-tight">
               성별을 선택해주세요
             </h1>
 
@@ -140,7 +140,7 @@ const Onboarding = () => {
         )}
         {step === 2 && (
           <div>
-            <h1 className="flex justify-center text-2xl font-bold mb-6">
+            <h1 className="text-center text-3xl font-extrabold mb-8 text-gray-900 drop-shadow-sm leading-tight break-keep max-w-md mx-auto tracking-tight">
               현재 나이를 알려주세요
             </h1>
 
@@ -182,7 +182,7 @@ const Onboarding = () => {
         )}
         {step === 3 && (
           <div>
-            <h1 className="flex justify-center text-2xl font-bold mb-6">
+            <h1 className="text-center text-3xl font-extrabold mb-8 text-gray-900 drop-shadow-sm leading-tight break-keep max-w-md mx-auto tracking-tight">
               좋아하지 않는 음식을 알려주세요
             </h1>
 
@@ -217,7 +217,7 @@ const Onboarding = () => {
         )}
         {step === 4 && (
           <div>
-            <h1 className="flex justify-center text-2xl font-bold mb-6">
+            <h1 className="text-center text-3xl font-extrabold mb-8 text-gray-900 drop-shadow-sm leading-tight break-keep max-w-md mx-auto tracking-tight">
               알레르기가 있는 음식이 있으신가요?
             </h1>
 
