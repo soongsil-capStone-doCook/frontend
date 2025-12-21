@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../../store/useUserStore";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
+import axiosInstance from "../../api/axiosInstance";
 // 온보딩 이미지 import
 import checkGender from "../../assets/images/onboarding/checkGender.png";
 import checkAge from "../../assets/images/onboarding/checkAge.png";
@@ -37,6 +38,9 @@ const Onboarding = () => {
     if (step < 4) {
       setStep(step + 1);
     }
+    if (step === 4) {
+      handleComplete();
+    }
   };
 
   // 이전 단계로 이동
@@ -46,12 +50,47 @@ const Onboarding = () => {
     }
   };
 
-  // 온보딩 완료 처리
-  const handleComplete = () => {
-    // TODO: 백엔드 API 호출하여 온보딩 데이터 전송
-    console.log("온보딩 완료:", formData);
-    // 완료 후 메인 페이지로 이동
-    // navigate("/");
+  // 온보딩 완료 처리 (성환이 노션 API 구조 참고)
+  const handleComplete = async () => {
+    console.log("=== 온보딩 완료 여부 조회 시작 ===");
+
+    try {
+      console.log("1. API 호출: GET /user/onboarding/check");
+
+      // 백엔드 API 호출 (GET /user/onboarding/check) - 파라미터 없음
+      const response = await axiosInstance.get("/user/onboarding/check");
+
+      console.log("2. 백엔드 응답 성공!");
+      console.log("   - 응답 상태:", response.status);
+      console.log("   - 응답 데이터:", response.data);
+
+      // 응답 확인: { "isOnboardingCompleted": true }
+      if (response.data.isOnboardingCompleted) {
+        console.log("3. ✅ 온보딩 완료 확인됨 - 메인 페이지로 이동");
+        navigate("/");
+      } else {
+        console.log("3. ⚠️ 온보딩 미완료 - 온보딩 페이지 유지");
+      }
+    } catch (error) {
+      console.error("=== 온보딩 완료 여부 조회 API 에러 ===");
+      console.error("에러 타입:", error.name);
+      console.error("에러 메시지:", error.message);
+
+      if (error.response) {
+        console.error("응답 상태 코드:", error.response.status);
+        console.error("응답 데이터:", error.response.data);
+      } else if (error.request) {
+        console.error("요청은 전송되었지만 응답을 받지 못했습니다.");
+      } else {
+        console.error("요청 설정 중 에러:", error.message);
+      }
+
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("온보딩 완료 여부 확인 중 문제가 발생했습니다.");
+      }
+    }
   };
 
   return (
