@@ -157,6 +157,14 @@ const Search = () => {
       setRecipes(filteredRecipes);
       setCurrentPage(1); // 검색 시 첫 페이지로 리셋
 
+      // [임시] Mock API 대응: 검색 결과를 localStorage에 저장
+      // TODO: 백엔드 API 완성 후 제거
+      const recipesMap = {};
+      filteredRecipes.forEach((recipe) => {
+        recipesMap[recipe.recipeId] = recipe;
+      });
+      localStorage.setItem("recipeCache", JSON.stringify(recipesMap));
+
       // 최근 검색어 저장 (포함+제외 키워드 형식)
       const searchString = searchKeywords
         .map((kw) => (kw.type === "exclude" ? `-${kw.text}` : kw.text))

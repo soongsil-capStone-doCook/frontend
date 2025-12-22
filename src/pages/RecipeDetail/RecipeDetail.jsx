@@ -10,6 +10,7 @@ import {
   HiExclamationCircle,
 } from "react-icons/hi";
 import { MdLocalFireDepartment } from "react-icons/md";
+import { mockRecipes } from "../../mockRecipeData"; // [임시] Mock 데이터
 
 const RecipeDetail = () => {
   const { recipeId } = useParams();
@@ -26,20 +27,43 @@ const RecipeDetail = () => {
         setError(null);
         console.log("🔍 레시피 ID:", recipeId);
 
-        // [임시] Mock API가 동적 파라미터 처리 못하므로 sessionStorage 캐시 확인
-        // TODO: 백엔드 API 완성 후 이 코드 제거하고 API만 호출
-        const cachedRecipe = sessionStorage.getItem(`recipe_${recipeId}`);
-        if (cachedRecipe) {
-          console.log("💾 캐시된 데이터 사용");
-          setRecipe(JSON.parse(cachedRecipe));
-          setIsLoading(false);
-          return;
+        // [임시] Mock API가 동적 파라미터 처리 못함 - localStorage 캐시 + API 병합
+        // TODO: 백엔드 API 완성 후 제거
+        const recipeCache = localStorage.getItem("recipeCache");
+        let cachedData = null;
+
+        if (recipeCache) {
+          const recipesMap = JSON.parse(recipeCache);
+          cachedData = recipesMap[recipeId];
+          if (cachedData) {
+            console.log("💾 캐시 데이터 발견:", cachedData.title);
+          }
         }
 
-        // 캐시 없으면 API 호출
+        // [임시] 캐시 없으면 mockRecipes 사용 (개발용)
+        const mockData = mockRecipes[recipeId];
+        if (!cachedData && mockData) {
+          console.log("🎭 Mock 데이터 사용:", mockData.title);
+        }
+
+        // API 호출하여 steps와 isScrapped 가져오기
         const response = await recipeAPI.getRecipeDetail(recipeId);
         console.log("✅ API 응답:", response.data);
-        setRecipe(response.data);
+
+        // 병합 우선순위: 캐시(검색결과) > Mock(개발용) > API(기본)
+        const mergedRecipe = {
+          ...response.data, // 기본: API 데이터
+          ...(mockData || {}), // Mock 덮어쓰기 (없으면 스킵)
+          ...(cachedData || {}), // 캐시 덮어쓰기 (최우선)
+        };
+
+        console.log(
+          "🎉 최종 데이터:",
+          mergedRecipe.title,
+          "steps:",
+          mergedRecipe.steps?.length
+        );
+        setRecipe(mergedRecipe);
       } catch (err) {
         console.error("❌ 레시피 상세 정보 로드 실패:", err);
         console.error("❌ 에러 상세:", err.response?.data || err.message);
