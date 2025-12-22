@@ -11,6 +11,9 @@ const RecipeCard = ({ recipe, size = "normal" }) => {
   const [imageError, setImageError] = useState(false);
 
   const handleCardClick = () => {
+    // [임시] Mock API가 동적 파라미터 처리 못하므로 sessionStorage 사용
+    // TODO: 백엔드 API 완성 후 이 코드 제거 예정
+    sessionStorage.setItem(`recipe_${recipe.recipeId}`, JSON.stringify(recipe));
     navigate(`/recipe/${recipe.recipeId}`);
   };
 

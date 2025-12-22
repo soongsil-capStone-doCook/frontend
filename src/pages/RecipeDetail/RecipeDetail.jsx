@@ -25,6 +25,18 @@ const RecipeDetail = () => {
         setIsLoading(true);
         setError(null);
         console.log("🔍 레시피 ID:", recipeId);
+
+        // [임시] Mock API가 동적 파라미터 처리 못하므로 sessionStorage 캐시 확인
+        // TODO: 백엔드 API 완성 후 이 코드 제거하고 API만 호출
+        const cachedRecipe = sessionStorage.getItem(`recipe_${recipeId}`);
+        if (cachedRecipe) {
+          console.log("💾 캐시된 데이터 사용");
+          setRecipe(JSON.parse(cachedRecipe));
+          setIsLoading(false);
+          return;
+        }
+
+        // 캐시 없으면 API 호출
         const response = await recipeAPI.getRecipeDetail(recipeId);
         console.log("✅ API 응답:", response.data);
         setRecipe(response.data);

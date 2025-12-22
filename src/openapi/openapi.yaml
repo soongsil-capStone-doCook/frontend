@@ -1467,12 +1467,15 @@ paths:
                     description: 사용자가 찜했는지 여부
                     example: true
               example:
-                recipeId: 501
+                recipeId: 601
                 title: "돼지고기 김치찌개"
-                description: "한국인의 소울푸드..."
+                description: "한국인의 소울푸드, 얼큰하고 시원한 김치찌개"
                 servings: "2인분"
                 cookTime: "30분"
                 difficulty: "중급"
+                calories: 350
+                matchRate: 85
+                thumbnail: "https://images.unsplash.com/photo-1604917017367-4b89d70e4b0a?w=300&h=200&fit=crop"
                 ingredients:
                   - name: "돼지고기"
                     amount: "200g"
@@ -1480,15 +1483,21 @@ paths:
                   - name: "김치"
                     amount: "1/4포기"
                     type: "주재료"
+                  - name: "두부"
+                    amount: "1/2모"
+                    type: "부재료"
                   - name: "대파"
                     amount: "1대"
                     type: "부재료"
                 steps:
                   - order: 1
-                    content: "김치와 고기를 썬다."
+                    content: "김치와 고기를 먹기 좋은 크기로 썬다."
                     imageUrl: "http://..."
                   - order: 2
-                    content: "냄비에 기름을 두르고 볶는다."
+                    content: "냄비에 기름을 두르고 김치와 고기를 볶는다."
+                    imageUrl: "http://..."
+                  - order: 3
+                    content: "물을 넣고 끓인 후 두부와 대파를 넣어 완성한다."
                     imageUrl: "http://..."
                 isScrapped: true
         "400":
