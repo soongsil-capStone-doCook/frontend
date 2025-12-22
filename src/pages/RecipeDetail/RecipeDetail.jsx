@@ -200,15 +200,6 @@ const RecipeDetail = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <MdLocalFireDepartment className="text-orange-500" size={20} />
-            <div>
-              <p className="text-xs text-gray-500">칼로리</p>
-              <p className="text-sm font-bold text-gray-900">
-                {recipe.calories || "미정"}kcal
-              </p>
-            </div>
-          </div>
           {recipe.servings && (
             <div className="flex items-center gap-2">
               <HiCheckCircle className="text-green-500" size={20} />
