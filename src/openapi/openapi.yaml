@@ -64,7 +64,7 @@ paths:
                 accessToken: "eyJhbGciOiJIUzI1..."
                 refreshToken: "d7s8f9a6s..."
                 expiresIn: 3600
-                isNewMember: false
+                isNewMember: true
                 user:
                   id: 1
                   nickname: "홍길동"
@@ -433,12 +433,25 @@ paths:
                           description: 입력 방법 (OCR 또는 MANUAL)
                           example: "MANUAL"
               example:
+                #items: [] 일 때 예시
                 items:
                   - id: 1
-                    name: "우유"
+                    name: "우유_테스트"
                     quantity: "1L"
                     storageCategory: "유제품"
-                    fridgeSlot: "MAIN_SHELF_2"
+                    fridgeSlot: "CRISPER_DRAWER"
+                    inputMethod: "MANUAL"
+                  - id: 2
+                    name: "계란_테스트"
+                    quantity: "1개"
+                    storageCategory: "기타"
+                    fridgeSlot: "CRISPER_DRAWER"
+                    inputMethod: "MANUAL"
+                  - id: 3
+                    name: "고기_테스트"
+                    quantity: "500g"
+                    storageCategory: "육류"
+                    fridgeSlot: "CRISPER_DRAWER"
                     inputMethod: "MANUAL"
         "400":
           description: Bad Request
@@ -460,8 +473,6 @@ paths:
               type: object
               required:
                 - name
-                - quantity
-                - storageCategory
               properties:
                 name:
                   type: string
@@ -469,12 +480,14 @@ paths:
                   example: "우유"
                 quantity:
                   type: string
-                  description: 수량
+                  nullable: true
+                  description: 수량 (선택사항)
                   example: "1L"
                 storageCategory:
                   type: string
+                  nullable: true
                   enum: [채소, 과일, 육류, 해산물, 유제품, 소스, 양념, 음료, 냉동식품, 기타]
-                  description: 저장 카테고리
+                  description: 저장 카테고리 (선택사항)
                   example: "유제품"
             example:
               name: "우유"

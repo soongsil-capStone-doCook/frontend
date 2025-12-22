@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { HiHome, HiOutlineHome } from 'react-icons/hi';
-import { MdOutlineKitchen, MdKitchen } from 'react-icons/md';
-import { FaCamera } from 'react-icons/fa';
-import { IoBookOutline, IoBook } from 'react-icons/io5';
-import { HiOutlineUser, HiUser } from 'react-icons/hi';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { HiHome, HiOutlineHome } from "react-icons/hi";
+import { MdOutlineKitchen, MdKitchen } from "react-icons/md";
+import { FaCamera } from "react-icons/fa";
+import { IoBookOutline, IoBook } from "react-icons/io5";
+import { HiOutlineUser, HiUser } from "react-icons/hi";
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -26,46 +26,46 @@ const BottomNav = () => {
       lastScrollY.current = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const navItems = [
     {
-      path: '/',
+      path: "/",
       icon: HiHome,
       activeIcon: HiHome,
-      label: '홈',
+      label: "홈",
     },
     {
-      path: '/fridge',
+      path: "/refrigerator",
       icon: MdOutlineKitchen,
       activeIcon: MdKitchen,
-      label: '냉장고',
+      label: "냉장고",
     },
     {
-      path: '/receipt',
+      path: "/receipt",
       icon: FaCamera,
-      label: '',
+      label: "",
       isCamera: true,
     },
     {
-      path: '/search',
+      path: "/search",
       icon: IoBookOutline,
       activeIcon: IoBook,
-      label: '레시피',
+      label: "레시피",
     },
     {
-      path: '/mypage',
+      path: "/mypage",
       icon: HiOutlineUser,
       activeIcon: HiUser,
-      label: '내 정보',
+      label: "내 정보",
     },
   ];
 
   const isActive = (path) => {
-    if (path === '/') {
-      return location.pathname === '/';
+    if (path === "/") {
+      return location.pathname === "/";
     }
     return location.pathname.startsWith(path);
   };
@@ -73,14 +73,17 @@ const BottomNav = () => {
   return (
     <nav
       className={`fixed bottom-0 left-1/2 w-full max-w-md z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 transition-transform duration-300 ease-in-out ${
-        isVisible ? '-translate-x-1/2 translate-y-0' : '-translate-x-1/2 translate-y-full'
+        isVisible
+          ? "-translate-x-1/2 translate-y-0"
+          : "-translate-x-1/2 translate-y-full"
       }`}
     >
       <div className="w-full">
         <div className="flex items-end justify-around px-2 py-3">
           {navItems.map((item) => {
             const active = isActive(item.path);
-            const Icon = active && item.activeIcon ? item.activeIcon : item.icon;
+            const Icon =
+              active && item.activeIcon ? item.activeIcon : item.icon;
 
             if (item.isCamera) {
               return (
@@ -104,12 +107,20 @@ const BottomNav = () => {
                 onClick={() => navigate(item.path)}
                 className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 ${
                   active
-                    ? 'text-slate-700 scale-105'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    ? "text-slate-700 scale-105"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <Icon className={`text-2xl transition-transform ${active ? 'scale-110' : ''}`} />
-                <span className={`text-xs font-medium transition-colors ${active ? 'text-slate-700' : ''}`}>
+                <Icon
+                  className={`text-2xl transition-transform ${
+                    active ? "scale-110" : ""
+                  }`}
+                />
+                <span
+                  className={`text-xs font-medium transition-colors ${
+                    active ? "text-slate-700" : ""
+                  }`}
+                >
                   {item.label}
                 </span>
               </button>
@@ -122,4 +133,3 @@ const BottomNav = () => {
 };
 
 export default BottomNav;
-

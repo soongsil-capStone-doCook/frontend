@@ -37,19 +37,23 @@ const KakaoCallback = () => {
         // 4. 응답에서 데이터 추출
         const data = response.data;
 
-        console.log("백엔드 로그인 성공:", data);
+        console.log("=== 카카오 로그인 응답 ===");
+        console.log("전체 응답 데이터:", data);
+        console.log("isNewMember:", data.isNewMember);
+        console.log("user:", data.user);
 
-        // 5. 토큰 저장
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
+        // 5. authorization code 저장
+        localStorage.setItem("authorizationCode", code);
 
         setIsLoggined(true);
         setUser(data.user);
 
-        // 6. 페이지 이동
+        // 6. 페이지 이동 - 최초 회원가입이면 온보딩 페이지로, 아니면 메인 페이지로
         if (data.isNewMember) {
-          navigate("/signup-info");
+          console.log("신규 회원 → 온보딩 페이지로 이동");
+          navigate("/onboarding");
         } else {
+          console.log("기존 회원 → 메인 페이지로 이동");
           navigate("/");
         }
       } catch (error) {

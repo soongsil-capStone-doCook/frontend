@@ -68,6 +68,12 @@ const Onboarding = () => {
         dislikedIngredients: parseArray(formData.nonPrefer),
         allergies: parseArray(formData.allergy),
       };
+
+      // 백엔드로 전송되는 데이터 로그 출력
+      console.log("=== 온보딩 완료 - 백엔드로 전송되는 데이터 ===");
+      console.log("전송 데이터:", transformedData);
+      console.log("엔드포인트: PATCH /users/me/preferences");
+
       // 2. PATCH /users/me/preferences로 데이터 저장
       await userAPI.updatePreferences(transformedData);
       console.log("데이터 저장 완료");
@@ -165,13 +171,16 @@ const Onboarding = () => {
                 </div>
               </button>
             </div>
-            {/* 1단계 "다음" 버튼 */}
-            <OnboardingNextButton
-              step={step}
-              formData={formData}
-              onNext={handleNext}
-            />
-            <OnboardingPreviousButton step={step} onPrevious={handlePrevious} />
+            {/* 1단계 버튼 */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+              <div className="flex justify-end items-center">
+                <OnboardingNextButton
+                  step={step}
+                  formData={formData}
+                  onNext={handleNext}
+                />
+              </div>
+            </div>
           </div>
         )}
         {step === 2 && (
@@ -207,13 +216,20 @@ const Onboarding = () => {
               ))}
             </div>
 
-            {/* 2단계 "다음" 버튼 */}
-            <OnboardingNextButton
-              step={step}
-              formData={formData}
-              onNext={handleNext}
-            />
-            <OnboardingPreviousButton step={step} onPrevious={handlePrevious} />
+            {/* 2단계 버튼 */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+              <div className="flex justify-between items-center">
+                <OnboardingPreviousButton
+                  step={step}
+                  onPrevious={handlePrevious}
+                />
+                <OnboardingNextButton
+                  step={step}
+                  formData={formData}
+                  onNext={handleNext}
+                />
+              </div>
+            </div>
           </div>
         )}
         {step === 3 && (
@@ -242,13 +258,20 @@ const Onboarding = () => {
               </p>
             </div>
 
-            {/* 3단계 "다음" 버튼 */}
-            <OnboardingNextButton
-              step={step}
-              formData={formData}
-              onNext={handleNext}
-            />
-            <OnboardingPreviousButton step={step} onPrevious={handlePrevious} />
+            {/* 3단계 버튼 */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+              <div className="flex justify-between items-center">
+                <OnboardingPreviousButton
+                  step={step}
+                  onPrevious={handlePrevious}
+                />
+                <OnboardingNextButton
+                  step={step}
+                  formData={formData}
+                  onNext={handleNext}
+                />
+              </div>
+            </div>
           </div>
         )}
         {step === 4 && (
@@ -277,9 +300,16 @@ const Onboarding = () => {
               </p>
             </div>
 
-            {/* 4단계 완료 버튼 */}
-            <OnboardingCompleteButton onComplete={handleComplete} />
-            <OnboardingPreviousButton step={step} onPrevious={handlePrevious} />
+            {/* 4단계 버튼 */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+              <div className="flex justify-between items-center">
+                <OnboardingPreviousButton
+                  step={step}
+                  onPrevious={handlePrevious}
+                />
+                <OnboardingCompleteButton onComplete={handleComplete} />
+              </div>
+            </div>
           </div>
         )}
       </div>
