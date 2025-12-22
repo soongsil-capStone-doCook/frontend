@@ -201,13 +201,50 @@ const Search = () => {
     localStorage.setItem("recentSearches", JSON.stringify(newRecentSearches));
   };
 
+  // 알레르기 필터 토글
+  const handleAllergyToggle = (checked) => {
+    setExcludeAllergy(checked);
+    
+    if (checked && profile?.allergies?.length > 0) {
+      // 알레르기 재료를 제외 키워드로 추가
+      const allergyKeywords = profile.allergies.map(allergy => ({
+        text: allergy,
+        type: "exclude"
+      }));
+      
+      // 기존 키워드와 합치되 중복 제거
+      const existingTexts = keywords.map(kw => kw.text);
+      const newAllergyKeywords = allergyKeywords.filter(
+        ak => !existingTexts.includes(ak.text)
+      );
+      
+      const updatedKeywords = [...keywords, ...newAllergyKeywords];
+      setKeywords(updatedKeywords);
+      
+      if (hasSearched) {
+        handleSearch(updatedKeywords);
+      }
+    } else if (!checked) {
+      // 체크 해제 시 알레르기 키워드 제거
+      const allergyTexts = profile?.allergies || [];
+      const filteredKeywords = keywords.filter(
+        kw => !(kw.type === "exclude" && allergyTexts.includes(kw.text))
+      );
+      setKeywords(filteredKeywords);
+      
+      if (hasSearched) {
+        handleSearch(filteredKeywords);
+      }
+    }
+  };
+
   // 정렬 변경 시 재검색
   useEffect(() => {
     if (hasSearched && keywords.length > 0) {
       handleSearch(keywords);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, excludeAllergy]);
+  }, [sortBy]);
 
   // 추천 검색어
   const popularKeywords = [
@@ -347,7 +384,7 @@ const Search = () => {
                       <input
                         type="checkbox"
                         checked={excludeAllergy}
-                        onChange={(e) => setExcludeAllergy(e.target.checked)}
+                        onChange={(e) => handleAllergyToggle(e.target.checked)}
                         className="w-5 h-5 text-slate-700 rounded focus:ring-2 focus:ring-slate-500"
                       />
                       <div>
