@@ -18,14 +18,14 @@ paths:
             schema:
               type: object
               required:
-                - kakaoAccessToken
+                - authorizationCode
               properties:
-                kakaoAccessToken:
+                authorizationCode:
                   type: string
-                  description: 카카오에서 받은 액세스 토큰
-                  example: "k9d8f7s6d5f4..."
+                  description: 카카오 OAuth 2.0 인증 후 받은 authorization code
+                  example: "abc123def456..."
             example:
-              kakaoAccessToken: "k9d8f7s6d5f4..."
+              authorizationCode: "abc123def456..."
       responses:
         "200":
           description: 로그인 성공 및 토큰 발급
@@ -70,7 +70,7 @@ paths:
                   nickname: "홍길동"
                   profileImage: "http://k.kakaocdn.net/..."
         "400":
-          description: Bad Request - Access Token이 만료되었거나 유효하지 않음
+          description: Bad Request - Authorization Code가 유효하지 않거나 만료됨
           content:
             application/json:
               schema:
@@ -78,7 +78,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Invalid or expired access token"
+                    example: "Invalid or expired authorization code"
   /auth/refresh:
     post:
       summary: 토큰 재발급
@@ -388,44 +388,58 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      example: 101
-                    name:
-                      type: string
-                      example: "계란"
-                    quantity:
-                      type: string
-                      example: "5개"
-                    category:
-                      type: string
-                      example: "신선식품"
-                    expiryDate:
-                      type: string
-                      format: date
-                      example: "2025-11-10"
-                    inputMethod:
-                      type: string
-                      enum: [OCR, MANUAL]
-                      description: OCR 또는 MANUAL
-                      example: "OCR"
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: 재료 ID
+                          example: 1
+                        name:
+                          type: string
+                          description: 재료 이름
+                          example: "우유"
+                        quantity:
+                          type: string
+                          description: 수량
+                          example: "1L"
+                        storageCategory:
+                          type: string
+                          description: 저장 카테고리
+                          example: "유제품"
+                        fridgeSlot:
+                          type: string
+                          description: 냉장고 선반 위치
+                          enum:
+                            [
+                              MAIN_SHELF_1,
+                              MAIN_SHELF_2,
+                              MAIN_SHELF_3,
+                              CRISPER_DRAWER,
+                              FREEZER_TOP,
+                              DOOR_SHELF_1,
+                              DOOR_SHELF_2,
+                              DOOR_SHELF_3,
+                              DOOR_SHELF_4,
+                            ]
+                          example: "MAIN_SHELF_2"
+                        inputMethod:
+                          type: string
+                          enum: [OCR, MANUAL]
+                          description: 입력 방법 (OCR 또는 MANUAL)
+                          example: "MANUAL"
               example:
-                - id: 101
-                  name: "계란"
-                  quantity: "5개"
-                  category: "신선식품"
-                  expiryDate: "2025-11-10"
-                  inputMethod: "OCR"
-                - id: 102
-                  name: "우유"
-                  quantity: "1L"
-                  category: "유제품"
-                  expiryDate: "2025-10-30"
-                  inputMethod: "MANUAL"
+                items:
+                  - id: 1
+                    name: "우유"
+                    quantity: "1L"
+                    storageCategory: "유제품"
+                    fridgeSlot: "MAIN_SHELF_2"
+                    inputMethod: "MANUAL"
         "400":
           description: Bad Request
           content:
@@ -433,7 +447,7 @@ paths:
               schema:
                 type: object
     post:
-      summary: 재료 수동 추가
+      summary: 재료 수동 추가 (단일)
       tags:
         - fridge
       security:
@@ -447,27 +461,25 @@ paths:
               required:
                 - name
                 - quantity
-                - category
+                - storageCategory
               properties:
                 name:
                   type: string
-                  example: "돼지고기 목살"
+                  description: 재료 이름
+                  example: "우유"
                 quantity:
                   type: string
-                  example: "300g"
-                expiryDate:
+                  description: 수량
+                  example: "1L"
+                storageCategory:
                   type: string
-                  format: date
-                  description: 선택 사항
-                  example: "2025-11-05"
-                category:
-                  type: string
-                  example: "육류"
+                  enum: [채소, 과일, 육류, 해산물, 유제품, 소스, 양념, 음료, 냉동식품, 기타]
+                  description: 저장 카테고리
+                  example: "유제품"
             example:
-              name: "돼지고기 목살"
-              quantity: "300g"
-              expiryDate: "2025-11-05"
-              category: "육류"
+              name: "우유"
+              quantity: "1L"
+              storageCategory: "유제품"
       responses:
         "200":
           description: 재료 추가 성공
@@ -478,42 +490,196 @@ paths:
                 properties:
                   id:
                     type: integer
-                    description: 생성된 재료에 대한 ID
-                    example: 101
+                    description: 생성된 재료 ID
+                    example: 18
                   name:
                     type: string
-                    example: "계란"
+                    description: 재료 이름
+                    example: "우유"
                   quantity:
                     type: string
-                    example: "5개"
-                  category:
+                    description: 수량
+                    example: "1L"
+                  storageCategory:
                     type: string
-                    example: "신선식품"
-                  expiryDate:
+                    description: 저장 카테고리
+                    example: "유제품"
+                  fridgeSlot:
                     type: string
-                    format: date
-                    example: "2025-11-10"
+                    description: 냉장고 선반 위치 (백엔드가 자동 할당)
+                    enum:
+                      [
+                        MAIN_SHELF_1,
+                        MAIN_SHELF_2,
+                        MAIN_SHELF_3,
+                        CRISPER_DRAWER,
+                        FREEZER_TOP,
+                        DOOR_SHELF_1,
+                        DOOR_SHELF_2,
+                        DOOR_SHELF_3,
+                        DOOR_SHELF_4,
+                      ]
+                    example: "MAIN_SHELF_2"
                   inputMethod:
                     type: string
-                    enum: [OCR, MANUAL]
-                    description: OCR 또는 MANUAL
-                    example: "OCR"
+                    enum: [MANUAL]
+                    description: 입력 방법 (수동 추가는 항상 MANUAL)
+                    example: "MANUAL"
               example:
-                id: 101
-                name: "계란"
-                quantity: "5개"
-                category: "신선식품"
-                expiryDate: "2025-11-10"
-                inputMethod: "OCR"
+                id: 18
+                name: "우유"
+                quantity: "1L"
+                storageCategory: "유제품"
+                fridgeSlot: "MAIN_SHELF_2"
+                inputMethod: "MANUAL"
+                storageCategory: "유제품"
+                fridgeSlot: "MAIN_SHELF_2"
+                inputMethod: "MANUAL"
         "400":
           description: Bad Request
           content:
             application/json:
               schema:
                 type: object
-  /fridge/ocr:
+  /fridge/batch:
+    post:
+      summary: 재료 수동 추가 (여러개)
+      tags:
+        - fridge
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - quantity
+                    properties:
+                      name:
+                        type: string
+                        description: 재료 이름
+                        example: "우유"
+                      quantity:
+                        type: string
+                        description: 수량
+                        example: "1L"
+                      expiryDate:
+                        type: string
+                        format: date
+                        nullable: true
+                        description: 유통기한 (YYYY-MM-DD 형식 또는 null)
+                        example: "2025-12-31"
+                      storageCategory:
+                        type: string
+                        nullable: true
+                        enum: [채소, 과일, 육류, 해산물, 유제품, 소스, 양념, 음료, 냉동식품, 기타]
+                        description: 저장 카테고리 (선택 사항, null 가능)
+                        example: "유제품"
+            example:
+              items:
+                - name: "우유"
+                  quantity: "1L"
+                  expiryDate: "2025-12-31"
+                  storageCategory: null
+                - name: "딸기"
+                  quantity: "500g"
+                  expiryDate: null
+                  storageCategory: "과일"
+                - name: "삼겹살"
+                  quantity: "600g"
+                  expiryDate: "2025-12-25"
+                  storageCategory: "육류"
+      responses:
+        "200":
+          description: 재료 일괄 추가 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saved:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: 생성된 재료 ID
+                          example: 19
+                        name:
+                          type: string
+                          description: 재료 이름
+                          example: "우유"
+                        quantity:
+                          type: string
+                          description: 수량
+                          example: "1L"
+                        storageCategory:
+                          type: string
+                          nullable: true
+                          description: 저장 카테고리
+                          example: "유제품"
+                        fridgeSlot:
+                          type: string
+                          description: 냉장고 선반 위치 (백엔드가 자동 할당)
+                          enum:
+                            [
+                              MAIN_SHELF_1,
+                              MAIN_SHELF_2,
+                              MAIN_SHELF_3,
+                              CRISPER_DRAWER,
+                              FREEZER_TOP,
+                              DOOR_SHELF_1,
+                              DOOR_SHELF_2,
+                              DOOR_SHELF_3,
+                              DOOR_SHELF_4,
+                            ]
+                          example: "MAIN_SHELF_2"
+                        inputMethod:
+                          type: string
+                          enum: [MANUAL]
+                          description: 입력 방법 (수동 추가는 항상 MANUAL)
+                          example: "MANUAL"
+              example:
+                saved:
+                  - id: 19
+                    name: "우유"
+                    quantity: "1L"
+                    storageCategory: null
+                    fridgeSlot: "MAIN_SHELF_2"
+                    inputMethod: "MANUAL"
+                  - id: 20
+                    name: "딸기"
+                    quantity: "500g"
+                    storageCategory: "과일"
+                    fridgeSlot: "CRISPER_DRAWER"
+                    inputMethod: "MANUAL"
+                  - id: 21
+                    name: "삼겹살"
+                    quantity: "600g"
+                    storageCategory: "육류"
+                    fridgeSlot: "MAIN_SHELF_3"
+                    inputMethod: "MANUAL"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /fridge/ocr-auto-place:
     post:
       summary: OCR 영수증/사진 인식 요청
+      description: 영수증/라벨 이미지를 업로드하면 OCR로 품목을 추출·정규화하고 DB에 저장한 뒤, LLM 배치 로직으로 fridgeSlot까지 자동 지정한다.
       tags:
         - fridge
       security:
@@ -525,44 +691,140 @@ paths:
             schema:
               type: object
               required:
-                - file
+                - image
               properties:
-                file:
+                image:
                   type: string
                   format: binary
-                  description: 영수증 사진
+                  description: 영수증/라벨 이미지 파일
       responses:
         "200":
-          description: 사진 분석 완료 및 임시 재료 리스트 반환
+          description: OCR 분석 완료 및 재료 저장 완료
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  recognizedId:
+                  rawText:
                     type: string
-                    example: "temp_12345"
-                  items:
+                    description: OCR로 추출된 원본 텍스트
+                    example: "우유 1L, 딸기 500g, 삼겹살 600g..."
+                  saved:
                     type: array
+                    description: DB에 저장된 재료 목록
                     items:
                       type: object
                       properties:
+                        id:
+                          type: integer
+                          description: 저장된 재료 ID
+                          example: 0
                         name:
                           type: string
-                          example: "콩나물"
-                        confidence:
-                          type: number
-                          format: float
-                          example: 0.98
+                          description: 재료 이름
+                          example: "우유"
+                        quantity:
+                          type: string
+                          description: 수량
+                          example: "1L"
+                        storageCategory:
+                          type: string
+                          nullable: true
+                          description: 저장 카테고리
+                          example: "유제품"
+                        fridgeSlot:
+                          type: string
+                          nullable: true
+                          description: 냉장고 선반 위치 (LLM이 자동 지정)
+                          enum:
+                            [
+                              MAIN_SHELF_1,
+                              MAIN_SHELF_2,
+                              MAIN_SHELF_3,
+                              CRISPER_DRAWER,
+                              FREEZER_TOP,
+                              DOOR_SHELF_1,
+                              DOOR_SHELF_2,
+                              DOOR_SHELF_3,
+                              DOOR_SHELF_4,
+                            ]
+                          example: "MAIN_SHELF_2"
+                        inputMethod:
+                          type: string
+                          enum: [OCR]
+                          description: 입력 방법 (OCR)
+                          example: "OCR"
+                  placed:
+                    type: array
+                    description: 선반에 배치된 재료 목록
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: 재료 ID
+                          example: 0
+                        name:
+                          type: string
+                          description: 재료 이름
+                          example: "우유"
+                        storageCategory:
+                          type: string
+                          nullable: true
+                          description: 저장 카테고리
+                          example: "유제품"
+                        fridgeSlot:
+                          type: string
+                          description: 배치된 선반 위치
+                          enum:
+                            [
+                              MAIN_SHELF_1,
+                              MAIN_SHELF_2,
+                              MAIN_SHELF_3,
+                              CRISPER_DRAWER,
+                              FREEZER_TOP,
+                              DOOR_SHELF_1,
+                              DOOR_SHELF_2,
+                              DOOR_SHELF_3,
+                              DOOR_SHELF_4,
+                            ]
+                          example: "MAIN_SHELF_2"
+                  unplaced:
+                    type: array
+                    description: 선반에 배치되지 못한 재료 목록
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: 재료 ID
+                          example: 0
+                        name:
+                          type: string
+                          description: 재료 이름
+                          example: "딸기"
+                        reason:
+                          type: string
+                          description: 배치 실패 이유
+                          example: "카테고리 정보 부족"
               example:
-                recognizedId: "temp_12345"
-                items:
-                  - name: "콩나물"
-                    confidence: 0.98
-                  - name: "두부"
-                    confidence: 0.95
-                  - name: "삼겹살"
-                    confidence: 0.88
+                rawText: "우유 1L, 딸기 500g, 삼겹살 600g..."
+                saved:
+                  - id: 0
+                    name: "string"
+                    quantity: "string"
+                    storageCategory: "string"
+                    fridgeSlot: "string"
+                    inputMethod: "OCR"
+                placed:
+                  - id: 0
+                    name: "string"
+                    storageCategory: "string"
+                    fridgeSlot: "string"
+                unplaced:
+                  - id: 0
+                    name: "string"
+                    reason: "string"
         "400":
           description: Bad Request
           content:
@@ -669,7 +931,7 @@ paths:
         - name: ingredientId
           in: path
           required: true
-          description: 재료 아이디
+          description: 재료 ID
           schema:
             type: integer
       responses:
