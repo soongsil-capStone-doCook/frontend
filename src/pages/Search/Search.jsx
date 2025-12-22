@@ -18,6 +18,8 @@ const Search = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recipesPerPage = 6;
 
   // 최근 검색어 불러오기
   useEffect(() => {
@@ -153,6 +155,7 @@ const Search = () => {
       }
 
       setRecipes(filteredRecipes);
+      setCurrentPage(1); // 검색 시 첫 페이지로 리셋
 
       // 최근 검색어 저장 (포함+제외 키워드 형식)
       const searchString = searchKeywords
@@ -204,23 +207,23 @@ const Search = () => {
   // 알레르기 필터 토글
   const handleAllergyToggle = (checked) => {
     setExcludeAllergy(checked);
-    
+
     if (checked && profile?.allergies?.length > 0) {
       // 알레르기 재료를 제외 키워드로 추가
-      const allergyKeywords = profile.allergies.map(allergy => ({
+      const allergyKeywords = profile.allergies.map((allergy) => ({
         text: allergy,
-        type: "exclude"
+        type: "exclude",
       }));
-      
+
       // 기존 키워드와 합치되 중복 제거
-      const existingTexts = keywords.map(kw => kw.text);
+      const existingTexts = keywords.map((kw) => kw.text);
       const newAllergyKeywords = allergyKeywords.filter(
-        ak => !existingTexts.includes(ak.text)
+        (ak) => !existingTexts.includes(ak.text)
       );
-      
+
       const updatedKeywords = [...keywords, ...newAllergyKeywords];
       setKeywords(updatedKeywords);
-      
+
       if (hasSearched) {
         handleSearch(updatedKeywords);
       }
@@ -228,10 +231,10 @@ const Search = () => {
       // 체크 해제 시 알레르기 키워드 제거
       const allergyTexts = profile?.allergies || [];
       const filteredKeywords = keywords.filter(
-        kw => !(kw.type === "exclude" && allergyTexts.includes(kw.text))
+        (kw) => !(kw.type === "exclude" && allergyTexts.includes(kw.text))
       );
       setKeywords(filteredKeywords);
-      
+
       if (hasSearched) {
         handleSearch(filteredKeywords);
       }
@@ -428,7 +431,90 @@ const Search = () => {
                 )}
               </h2>
             </div>
-            <RecipeGrid recipes={recipes} isLoading={isLoading} />
+            <RecipeGrid
+              recipes={recipes.slice(
+                (currentPage - 1) * recipesPerPage,
+                currentPage * recipesPerPage
+              )}
+              isLoading={isLoading}
+            />
+
+            {/* 페이지네이션 */}
+            {!isLoading && recipes.length > 0 && (
+              <div className="mt-6 flex items-center justify-center gap-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  이전
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {[...Array(Math.ceil(recipes.length / recipesPerPage))].map(
+                    (_, idx) => {
+                      const pageNum = idx + 1;
+                      const totalPages = Math.ceil(
+                        recipes.length / recipesPerPage
+                      );
+
+                      // 페이지가 많을 때 일부만 표시
+                      if (
+                        totalPages > 7 &&
+                        pageNum !== 1 &&
+                        pageNum !== totalPages &&
+                        Math.abs(pageNum - currentPage) > 2
+                      ) {
+                        if (
+                          pageNum === currentPage - 3 ||
+                          pageNum === currentPage + 3
+                        ) {
+                          return (
+                            <span key={idx} className="px-2 text-gray-400">
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      }
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                            currentPage === pageNum
+                              ? "bg-slate-700 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    }
+                  )}
+                </div>
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(
+                        Math.ceil(recipes.length / recipesPerPage),
+                        prev + 1
+                      )
+                    )
+                  }
+                  disabled={
+                    currentPage === Math.ceil(recipes.length / recipesPerPage)
+                  }
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  다음
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div>

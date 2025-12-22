@@ -1,4 +1,4 @@
-import RecipeCard from './RecipeCard';
+import RecipeCard from "./RecipeCard";
 
 const RecipeGrid = ({ recipes, isLoading }) => {
   if (isLoading) {
@@ -24,7 +24,7 @@ const RecipeGrid = ({ recipes, isLoading }) => {
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      {recipes.slice(0, 6).map((recipe) => (
+      {recipes.map((recipe) => (
         <RecipeCard key={recipe.recipeId} recipe={recipe} size="normal" />
       ))}
     </div>
@@ -32,4 +32,3 @@ const RecipeGrid = ({ recipes, isLoading }) => {
 };
 
 export default RecipeGrid;
-
