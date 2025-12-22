@@ -103,8 +103,7 @@ const Search = () => {
 
   // 검색 실행
   const handleSearch = async (searchKeywords = keywords) => {
-    if (searchKeywords.length === 0) return;
-
+    // 키워드가 없어도 검색 가능 (전체 레시피 조회)
     try {
       setIsLoading(true);
       setHasSearched(true);
@@ -295,14 +294,16 @@ const Search = () => {
               <button
                 onClick={() => {
                   if (keyword.trim()) {
-                    handleSearch([...keywords, keyword.trim()]);
+                    handleSearch([
+                      ...keywords,
+                      { text: keyword.trim(), type: "include" },
+                    ]);
                     setKeyword("");
                   } else {
                     handleSearch(keywords);
                   }
                 }}
-                disabled={keywords.length === 0 && !keyword.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-700 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-700 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors font-medium"
               >
                 검색
               </button>
