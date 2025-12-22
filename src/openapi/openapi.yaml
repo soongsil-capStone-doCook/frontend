@@ -27,7 +27,7 @@ paths:
             example:
               kakaoAccessToken: "k9d8f7s6d5f4..."
       responses:
-        '200':
+        "200":
           description: 로그인 성공 및 토큰 발급
           content:
             application/json:
@@ -69,7 +69,7 @@ paths:
                   id: 1
                   nickname: "홍길동"
                   profileImage: "http://k.kakaocdn.net/..."
-        '400':
+        "400":
           description: Bad Request - Access Token이 만료되었거나 유효하지 않음
           content:
             application/json:
@@ -94,7 +94,7 @@ paths:
             schema:
               type: object
       responses:
-        '200':
+        "200":
           description: 새로운 액세스 토큰 발급 성공
           content:
             application/json:
@@ -110,7 +110,7 @@ paths:
               example:
                 accessToken: "new_access_token..."
                 expiresIn: 3600
-        '400':
+        "400":
           description: Bad Request - Refresh Token이 유효하지 않음
           content:
             application/json:
@@ -135,7 +135,7 @@ paths:
             schema:
               type: object
       responses:
-        '200':
+        "200":
           description: 로그아웃 성공
           content:
             application/json:
@@ -147,7 +147,7 @@ paths:
                     example: "로그아웃되었습니다."
               example:
                 message: "로그아웃되었습니다."
-        '401':
+        "401":
           description: Unauthorized - 인증되지 않은 사용자
           content:
             application/json:
@@ -167,7 +167,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 프로필 정보 반환 성공
           content:
             application/json:
@@ -203,14 +203,14 @@ paths:
                 userId: 1
                 nickname: "홍길동"
                 email: "hong@daum.net"
-                allergies: 
+                allergies:
                   - "새우"
                   - "땅콩"
-                dislikedIngredients: 
+                dislikedIngredients:
                   - "오이"
                   - "고수"
                 profileImage: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -240,23 +240,71 @@ paths:
                   items:
                     type: string
                   description: 좋아하지 않는 음식 배열
+                age:
+                  type: string
+                  description: 나이
+                gender:
+                  type: string
+                  description: 성별
             example:
               allergies: ["우유", "대두"]
               dislikedIngredients: ["오이"]
+              age: "12"
+              gender: "남자"
       responses:
-        '200':
+        "200":
           description: 수정 완료
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status:
+                  allergies:
+                    type: array
+                    items:
+                      type: string
+                    description: 알레르기 배열
+                  dislikedIngredients:
+                    type: array
+                    items:
+                      type: string
+                    description: 좋아하지 않는 음식 배열
+                  age:
                     type: string
-                    example: "COMPLETE"
+                    description: 나이
+                  gender:
+                    type: string
+                    description: 성별
               example:
-                status: "COMPLETE"
-        '400':
+                allergies: ["우유", "대두"]
+                dislikedIngredients: ["오이"]
+                age: "12"
+                gender: "남자"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /user/onboarding/check:
+    get:
+      summary: 온보딩 완료 여부 조회
+      tags:
+        - members
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 온보딩 완료 여부 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isOnboardingCompleted:
+                    type: boolean
+                    description: 온보딩 완료 여부
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -270,7 +318,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 찜한 레시피 목록 조회 성공
           content:
             application/json:
@@ -319,7 +367,7 @@ paths:
                   cookTime: "20분"
                   difficulty: "초급"
                   savedAt: "2023-10-26T15:30:00Z"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -335,7 +383,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 냉장고 재료 목록 조회 성공
           content:
             application/json:
@@ -378,7 +426,7 @@ paths:
                   category: "유제품"
                   expiryDate: "2025-10-30"
                   inputMethod: "MANUAL"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -421,7 +469,7 @@ paths:
               expiryDate: "2025-11-05"
               category: "육류"
       responses:
-        '200':
+        "200":
           description: 재료 추가 성공
           content:
             application/json:
@@ -457,7 +505,7 @@ paths:
                 category: "신선식품"
                 expiryDate: "2025-11-10"
                 inputMethod: "OCR"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -484,7 +532,7 @@ paths:
                   format: binary
                   description: 영수증 사진
       responses:
-        '200':
+        "200":
           description: 사진 분석 완료 및 임시 재료 리스트 반환
           content:
             application/json:
@@ -515,7 +563,7 @@ paths:
                     confidence: 0.95
                   - name: "삼겹살"
                     confidence: 0.88
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -570,7 +618,7 @@ paths:
               expiryDate: "2025-11-10"
               inputMethod: "OCR"
       responses:
-        '200':
+        "200":
           description: 수정 성공
           content:
             application/json:
@@ -605,7 +653,7 @@ paths:
                 category: "신선식품"
                 expiryDate: "2025-11-10"
                 inputMethod: "OCR"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -625,13 +673,13 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: 삭제 완료
           content:
             application/json:
               schema:
                 type: object
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -661,7 +709,7 @@ paths:
             example:
               mustInclude: ["돼지고기", "김치"]
       responses:
-        '200':
+        "200":
           description: 추천 목록 반환 성공
           content:
             application/json:
@@ -768,7 +816,7 @@ paths:
                   missingIngredients: []
                   cookTime: "12분"
                   difficulty: "초급"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -790,7 +838,7 @@ paths:
             type: integer
             example: 2
       responses:
-        '200':
+        "200":
           description: 성공
           content:
             application/json:
@@ -897,7 +945,7 @@ paths:
                   missingIngredients: []
                   cookTime: "22분"
                   difficulty: "초급"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -911,7 +959,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 성공
           content:
             application/json:
@@ -1018,7 +1066,7 @@ paths:
                   missingIngredients: []
                   cookTime: "20분"
                   difficulty: "초급"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1049,7 +1097,7 @@ paths:
           schema:
             type: boolean
       responses:
-        '200':
+        "200":
           description: 레시피 검색 성공
           content:
             application/json:
@@ -1141,7 +1189,7 @@ paths:
                   missingIngredients: ["소갈비"]
                   cookTime: "90분"
                   difficulty: "고급"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1161,7 +1209,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: 상세 정보 반환 성공
           content:
             application/json:
@@ -1244,7 +1292,7 @@ paths:
                     content: "냄비에 기름을 두르고 볶는다."
                     imageUrl: "http://..."
                 isScrapped: true
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1265,13 +1313,13 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: 찜 등록 성공
           content:
             application/json:
               schema:
                 type: object
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1291,13 +1339,13 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: 찜 해제 성공
           content:
             application/json:
               schema:
                 type: object
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
