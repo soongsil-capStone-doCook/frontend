@@ -8,6 +8,8 @@ import MyPage from "./pages/MyPage/MyPage";
 import Login from "./pages/Login/Login";
 import KakaoCallback from "./pages/Login/KakaoCallback";
 import Onboarding from "./pages/Login/Onboarding";
+import RecipeDetail from "./pages/RecipeDetail/RecipeDetail";
+
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
         <Route path="refrigerator" element={<Refrigerator />} />
         <Route path="receipt" element={<Receipt />} />
         <Route path="search" element={<Search />} />
+        <Route path="recipe/:recipeId" element={<RecipeDetail />} />
         <Route path="mypage" element={<MyPage />} />
         <Route path="login" element={<Login />} />
         <Route path="login/kakao/callback" element={<KakaoCallback />} />
