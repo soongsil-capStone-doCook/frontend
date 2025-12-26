@@ -1516,82 +1516,100 @@ paths:
               schema:
                 type: object
                 properties:
-                  recipeId:
-                    type: integer
-                    example: 501
-                  title:
-                    type: string
-                    example: "돼지고기 김치찌개"
-                  description:
-                    type: string
-                    example: "한국인의 소울푸드..."
-                  servings:
-                    type: string
-                    example: "2인분"
-                  cookTime:
-                    type: string
-                    example: "30분"
-                  difficulty:
-                    type: string
-                    example: "중급"
-                  ingredients:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                          example: "돼지고기"
-                        amount:
-                          type: string
-                          example: "200g"
-                        type:
-                          type: string
-                          example: "주재료"
-                  steps:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        order:
-                          type: integer
-                          example: 1
-                        content:
-                          type: string
-                          example: "김치와 고기를 썬다."
-                        imageUrl:
-                          type: string
-                          format: uri
-                          example: "http://..."
-                  isScrapped:
+                  isSuccess:
                     type: boolean
-                    description: 사용자가 찜했는지 여부
                     example: true
+                  code:
+                    type: string
+                    example: "RECIPE_201"
+                  message:
+                    type: string
+                    example: "성공적으로 레시피의 상세 정보를 조회했습니다."
+                  result:
+                    type: object
+                    properties:
+                      recipeId:
+                        type: integer
+                        example: 59
+                      title:
+                        type: string
+                        example: "차돌박이떡볶음으로 즐기는 특별한요리"
+                      description:
+                        type: string
+                        example: "달콤하고 짭조름한 맛이 일품인 차돌박이 떡볶음입니다."
+                      mainImage:
+                        type: string
+                        format: uri
+                        example: "https://capstone-fridge.s3.ap-northeast-2.amazonaws.com/recipes/59/main.png"
+                      servings:
+                        type: string
+                        example: "2인분"
+                      cookTime:
+                        type: string
+                        example: "20분 이내"
+                      difficulty:
+                        type: string
+                        example: "아무나"
+                      ingredients:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              example: "차돌박이"
+                            amount:
+                              type: string
+                              example: "200g"
+                            type:
+                              type: string
+                              example: "주재료"
+                      steps:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            order:
+                              type: integer
+                              example: 1
+                            content:
+                              type: string
+                              example: "차돌박이를 준비합니다."
+                            imageUrl:
+                              type: string
+                              format: uri
+                              example: "http://..."
+                      isScrapped:
+                        type: boolean
+                        description: 사용자가 찜했는지 여부
+                        example: false
               example:
-                recipeId: 501
-                title: "돼지고기 김치찌개"
-                description: "한국인의 소울푸드..."
-                servings: "2인분"
-                cookTime: "30분"
-                difficulty: "중급"
-                ingredients:
-                  - name: "돼지고기"
-                    amount: "200g"
-                    type: "주재료"
-                  - name: "김치"
-                    amount: "1/4포기"
-                    type: "주재료"
-                  - name: "대파"
-                    amount: "1대"
-                    type: "부재료"
-                steps:
-                  - order: 1
-                    content: "김치와 고기를 썬다."
-                    imageUrl: "http://..."
-                  - order: 2
-                    content: "냄비에 기름을 두르고 볶는다."
-                    imageUrl: "http://..."
-                isScrapped: true
+                isSuccess: true
+                code: "RECIPE_201"
+                message: "성공적으로 레시피의 상세 정보를 조회했습니다."
+                result:
+                  recipeId: 59
+                  title: "차돌박이떡볶음으로 즐기는 특별한요리"
+                  description: "달콤하고 짭조름한 맛이 일품인 차돌박이 떡볶음입니다. 매운 거 못 드시는 분들은 한번 만들어 보세요."
+                  mainImage: "https://capstone-fridge.s3.ap-northeast-2.amazonaws.com/recipes/59/main.png"
+                  servings: "2인분"
+                  cookTime: "20분 이내"
+                  difficulty: "아무나"
+                  ingredients:
+                    - name: "차돌박이"
+                      amount: "200g"
+                      type: "주재료"
+                    - name: "떡볶이떡"
+                      amount: "300g"
+                      type: "주재료"
+                  steps:
+                    - order: 1
+                      content: "차돌박이를 준비합니다."
+                      imageUrl: "http://..."
+                    - order: 2
+                      content: "떡볶이 소스를 만듭니다."
+                      imageUrl: "http://..."
+                  isScrapped: false
         "400":
           description: Bad Request
           content:
