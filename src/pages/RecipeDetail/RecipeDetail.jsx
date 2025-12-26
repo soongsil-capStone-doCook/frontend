@@ -50,9 +50,12 @@ const RecipeDetail = () => {
         const response = await recipeAPI.getRecipeDetail(recipeId);
         console.log("✅ API 응답:", response.data);
 
+        // 실제 응답 형식: { isSuccess, code, message, result: {...} }
+        const apiData = response.data?.result || response.data;
+
         // 병합 우선순위: 캐시(검색결과) > Mock(개발용) > API(기본)
         const mergedRecipe = {
-          ...response.data, // 기본: API 데이터
+          ...apiData, // 기본: API 데이터
           ...(mockData || {}), // Mock 덮어쓰기 (없으면 스킵)
           ...(cachedData || {}), // 캐시 덮어쓰기 (최우선)
         };
