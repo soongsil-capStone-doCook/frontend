@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home/Home";
 import Refrigerator from "./pages/Fridge/MyRefrigerator";
 import Receipt from "./pages/Receipt/Receipt";
+import ReceiptResult from "./pages/Receipt/ReceiptResult";
 import Search from "./pages/Search/Search";
 import MyPage from "./pages/MyPage/MyPage";
 import Login from "./pages/Login/Login";
@@ -18,6 +19,7 @@ function App() {
         <Route index element={<Home />} />
         <Route path="refrigerator" element={<Refrigerator />} />
         <Route path="receipt" element={<Receipt />} />
+        <Route path="receipt/result" element={<ReceiptResult />} />
         <Route path="search" element={<Search />} />
         <Route path="recipe/:recipeId" element={<RecipeDetail />} />
         <Route path="mypage" element={<MyPage />} />

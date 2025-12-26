@@ -17,7 +17,7 @@ export const fridgeAPI = {
     return axiosInstance.post("/fridge/batch", { items });
   },
 
-  // OCR 영수증/사진 인식 요청
+  // OCR 영수증/사진 인식 요청 (타임아웃 60초)
   recognizeReceipt: (imageFile) => {
     const formData = new FormData();
     formData.append("image", imageFile);
@@ -26,6 +26,7 @@ export const fridgeAPI = {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      timeout: 60000, // OCR은 시간이 오래 걸릴 수 있으므로 60초로 설정
     });
   },
 
