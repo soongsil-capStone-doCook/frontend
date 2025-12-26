@@ -181,42 +181,44 @@ paths:
               schema:
                 type: object
                 properties:
-                  userId:
-                    type: integer
-                    example: 1
-                  nickname:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  code:
                     type: string
-                    example: "홍길동"
-                  email:
+                    example: "MEMBER_200"
+                  message:
                     type: string
-                    format: email
-                    description: 카카오 계정 이메일 (동의 시)
-                    example: "hong@daum.net"
-                  allergies:
-                    type: array
-                    items:
-                      type: string
-                    example: ["새우", "땅콩"]
-                  dislikedIngredients:
-                    type: array
-                    items:
-                      type: string
-                    example: ["오이", "고수"]
-                  profileImage:
-                    type: string
-                    format: uri
-                    example: "url..."
+                    example: "성공적으로 유저 정보를 조회했습니다."
+                  result:
+                    type: object
+                    properties:
+                      memberId:
+                        type: integer
+                        example: 1
+                      nickname:
+                        type: string
+                        example: "kakao-user"
+                      email:
+                        type: string
+                        format: email
+                        nullable: true
+                        description: 카카오 계정 이메일 (동의 시)
+                        example: null
+                      profileImageUrl:
+                        type: string
+                        format: uri
+                        nullable: true
+                        example: null
               example:
-                userId: 1
-                nickname: "홍길동"
-                email: "hong@daum.net"
-                allergies:
-                  - "새우"
-                  - "땅콩"
-                dislikedIngredients:
-                  - "오이"
-                  - "고수"
-                profileImage: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop"
+                isSuccess: true
+                code: "MEMBER_200"
+                message: "성공적으로 유저 정보를 조회했습니다."
+                result:
+                  memberId: 1
+                  nickname: "kakao-user"
+                  email: null
+                  profileImageUrl: null
         "400":
           description: Bad Request
           content:
