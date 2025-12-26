@@ -72,7 +72,7 @@ const BottomNav = () => {
 
   return (
     <nav
-      className={`fixed bottom-0 left-1/2 w-full max-w-md z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 transition-transform duration-300 ease-in-out ${
+      className={`fixed bottom-0 left-1/2 w-full max-w-md z-40 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 transition-transform duration-300 ease-in-out ${
         isVisible
           ? "-translate-x-1/2 translate-y-0"
           : "-translate-x-1/2 translate-y-full"
