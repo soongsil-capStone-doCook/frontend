@@ -18,16 +18,23 @@ paths:
             schema:
               type: object
               required:
-                - kakaoAccessToken
+                - code
+                - redirectUri
               properties:
-                kakaoAccessToken:
+                code:
                   type: string
-                  description: 카카오에서 받은 액세스 토큰
-                  example: "k9d8f7s6d5f4..."
+                  description: 카카오 OAuth 2.0 인증 후 받은 authorization code
+                  example: "abc123def456..."
+                redirectUri:
+                  type: string
+                  format: uri
+                  description: 카카오 인증 시 사용한 redirect URI (카카오 토큰 교환 시 동일한 URI 필요)
+                  example: "http://localhost:5173/login/kakao/callback"
             example:
-              kakaoAccessToken: "k9d8f7s6d5f4..."
+              code: "abc123def456..."
+              redirectUri: "http://localhost:5173/login/kakao/callback"
       responses:
-        '200':
+        "200":
           description: 로그인 성공 및 토큰 발급
           content:
             application/json:
@@ -64,13 +71,13 @@ paths:
                 accessToken: "eyJhbGciOiJIUzI1..."
                 refreshToken: "d7s8f9a6s..."
                 expiresIn: 3600
-                isNewMember: false
+                isNewMember: true
                 user:
                   id: 1
                   nickname: "홍길동"
                   profileImage: "http://k.kakaocdn.net/..."
-        '400':
-          description: Bad Request - Access Token이 만료되었거나 유효하지 않음
+        "400":
+          description: Bad Request - Authorization Code가 유효하지 않거나 만료됨
           content:
             application/json:
               schema:
@@ -78,7 +85,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Invalid or expired access token"
+                    example: "Invalid or expired authorization code"
   /auth/refresh:
     post:
       summary: 토큰 재발급
@@ -94,7 +101,7 @@ paths:
             schema:
               type: object
       responses:
-        '200':
+        "200":
           description: 새로운 액세스 토큰 발급 성공
           content:
             application/json:
@@ -110,7 +117,7 @@ paths:
               example:
                 accessToken: "new_access_token..."
                 expiresIn: 3600
-        '400':
+        "400":
           description: Bad Request - Refresh Token이 유효하지 않음
           content:
             application/json:
@@ -135,7 +142,7 @@ paths:
             schema:
               type: object
       responses:
-        '200':
+        "200":
           description: 로그아웃 성공
           content:
             application/json:
@@ -147,7 +154,7 @@ paths:
                     example: "로그아웃되었습니다."
               example:
                 message: "로그아웃되었습니다."
-        '401':
+        "401":
           description: Unauthorized - 인증되지 않은 사용자
           content:
             application/json:
@@ -167,7 +174,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 프로필 정보 반환 성공
           content:
             application/json:
@@ -203,14 +210,14 @@ paths:
                 userId: 1
                 nickname: "홍길동"
                 email: "hong@daum.net"
-                allergies: 
+                allergies:
                   - "새우"
                   - "땅콩"
-                dislikedIngredients: 
+                dislikedIngredients:
                   - "오이"
                   - "고수"
                 profileImage: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -240,23 +247,71 @@ paths:
                   items:
                     type: string
                   description: 좋아하지 않는 음식 배열
+                age:
+                  type: string
+                  description: 나이
+                gender:
+                  type: string
+                  description: 성별
             example:
               allergies: ["우유", "대두"]
               dislikedIngredients: ["오이"]
+              age: "12"
+              gender: "남자"
       responses:
-        '200':
+        "200":
           description: 수정 완료
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status:
+                  allergies:
+                    type: array
+                    items:
+                      type: string
+                    description: 알레르기 배열
+                  dislikedIngredients:
+                    type: array
+                    items:
+                      type: string
+                    description: 좋아하지 않는 음식 배열
+                  age:
                     type: string
-                    example: "COMPLETE"
+                    description: 나이
+                  gender:
+                    type: string
+                    description: 성별
               example:
-                status: "COMPLETE"
-        '400':
+                allergies: ["우유", "대두"]
+                dislikedIngredients: ["오이"]
+                age: "12"
+                gender: "남자"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /user/onboarding/check:
+    get:
+      summary: 온보딩 완료 여부 조회
+      tags:
+        - members
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 온보딩 완료 여부 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isOnboardingCompleted:
+                    type: boolean
+                    description: 온보딩 완료 여부
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -270,56 +325,77 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 찜한 레시피 목록 조회 성공
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    favoriteId:
-                      type: integer
-                      description: 찜하기 고유 ID (삭제 요청 시 유용)
-                      example: 10
-                    recipeId:
-                      type: integer
-                      example: 501
-                    title:
-                      type: string
-                      example: "돼지고기 김치찌개"
-                    thumbnail:
-                      type: string
-                      format: uri
-                      example: "http://..."
-                    cookTime:
-                      type: string
-                      example: "30분"
-                    difficulty:
-                      type: string
-                      example: "중급"
-                    savedAt:
-                      type: string
-                      format: date-time
-                      description: 언제 찜했는지 (정렬용)
-                      example: "2023-10-27T10:00:00Z"
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  code:
+                    type: string
+                    example: "RECIPE_200"
+                  message:
+                    type: string
+                    example: "성공적으로 레시피를 조회했습니다."
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        recipeId:
+                          type: integer
+                          example: 3
+                        title:
+                          type: string
+                          example: "【간단반찬】꽈리고추 햄볶음 만들기~"
+                        description:
+                          type: string
+                          example: "단짠 밥도둑 꽈리고추 햄볶음 이에요~"
+                        mainImage:
+                          type: string
+                          format: uri
+                          example: "https://capstone-fridge.s3.ap-northeast-2.amazonaws.com/recipes/3/main.png"
+                        cookTime:
+                          type: string
+                          example: "10분 이내"
+                        difficulty:
+                          type: string
+                          example: "아무나"
+                        servings:
+                          type: string
+                          nullable: true
+                          example: null
+                        missingIngredients:
+                          type: array
+                          items:
+                            type: string
+                          example: []
               example:
-                - favoriteId: 10
-                  recipeId: 501
-                  title: "돼지고기 김치찌개"
-                  thumbnail: "http://..."
-                  cookTime: "30분"
-                  difficulty: "중급"
-                  savedAt: "2023-10-27T10:00:00Z"
-                - favoriteId: 12
-                  recipeId: 505
-                  title: "김치 제육볶음"
-                  thumbnail: "http://..."
-                  cookTime: "20분"
-                  difficulty: "초급"
-                  savedAt: "2023-10-26T15:30:00Z"
-        '400':
+                isSuccess: true
+                code: "RECIPE_200"
+                message: "성공적으로 레시피를 조회했습니다."
+                result:
+                  - recipeId: 3
+                    title: "【간단반찬】꽈리고추 햄볶음 만들기~"
+                    description: "단짠 밥도둑 꽈리고추 햄볶음 이에요~"
+                    mainImage: "https://capstone-fridge.s3.ap-northeast-2.amazonaws.com/recipes/3/main.png"
+                    cookTime: "10분 이내"
+                    difficulty: "아무나"
+                    servings: null
+                    missingIngredients: []
+                  - recipeId: 59
+                    title: "차돌박이떡볶음으로 즐기는 특별한요리"
+                    description: "달콤하고 짭조름한 맛이 일품인 차돌박이 떡볶음입니다."
+                    mainImage: "https://capstone-fridge.s3.ap-northeast-2.amazonaws.com/recipes/59/main.png"
+                    cookTime: "20분 이내"
+                    difficulty: "아무나"
+                    servings: null
+                    missingIngredients: []
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -335,57 +411,84 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 냉장고 재료 목록 조회 성공
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      example: 101
-                    name:
-                      type: string
-                      example: "계란"
-                    quantity:
-                      type: string
-                      example: "5개"
-                    category:
-                      type: string
-                      example: "신선식품"
-                    expiryDate:
-                      type: string
-                      format: date
-                      example: "2025-11-10"
-                    inputMethod:
-                      type: string
-                      enum: [OCR, MANUAL]
-                      description: OCR 또는 MANUAL
-                      example: "OCR"
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: 재료 ID
+                          example: 1
+                        name:
+                          type: string
+                          description: 재료 이름
+                          example: "우유"
+                        quantity:
+                          type: string
+                          description: 수량
+                          example: "1L"
+                        storageCategory:
+                          type: string
+                          description: 저장 카테고리
+                          example: "유제품"
+                        fridgeSlot:
+                          type: string
+                          description: 냉장고 선반 위치
+                          enum:
+                            [
+                              MAIN_SHELF_1,
+                              MAIN_SHELF_2,
+                              MAIN_SHELF_3,
+                              CRISPER_DRAWER,
+                              FREEZER_TOP,
+                              DOOR_SHELF_1,
+                              DOOR_SHELF_2,
+                              DOOR_SHELF_3,
+                              DOOR_SHELF_4,
+                            ]
+                          example: "MAIN_SHELF_2"
+                        inputMethod:
+                          type: string
+                          enum: [OCR, MANUAL]
+                          description: 입력 방법 (OCR 또는 MANUAL)
+                          example: "MANUAL"
               example:
-                - id: 101
-                  name: "계란"
-                  quantity: "5개"
-                  category: "신선식품"
-                  expiryDate: "2025-11-10"
-                  inputMethod: "OCR"
-                - id: 102
-                  name: "우유"
-                  quantity: "1L"
-                  category: "유제품"
-                  expiryDate: "2025-10-30"
-                  inputMethod: "MANUAL"
-        '400':
+                #items: [] 일 때 예시
+                items:
+                  - id: 1
+                    name: "우유_테스트"
+                    quantity: "1L"
+                    storageCategory: "유제품"
+                    fridgeSlot: "CRISPER_DRAWER"
+                    inputMethod: "MANUAL"
+                  - id: 2
+                    name: "계란_테스트"
+                    quantity: "1개"
+                    storageCategory: "기타"
+                    fridgeSlot: "CRISPER_DRAWER"
+                    inputMethod: "MANUAL"
+                  - id: 3
+                    name: "고기_테스트"
+                    quantity: "500g"
+                    storageCategory: "육류"
+                    fridgeSlot: "CRISPER_DRAWER"
+                    inputMethod: "MANUAL"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
                 type: object
     post:
-      summary: 재료 수동 추가
+      summary: 재료 수동 추가 (단일)
       tags:
         - fridge
       security:
@@ -398,30 +501,28 @@ paths:
               type: object
               required:
                 - name
-                - quantity
-                - category
               properties:
                 name:
                   type: string
-                  example: "돼지고기 목살"
+                  description: 재료 이름
+                  example: "우유"
                 quantity:
                   type: string
-                  example: "300g"
-                expiryDate:
+                  nullable: true
+                  description: 수량 (선택사항)
+                  example: "1L"
+                storageCategory:
                   type: string
-                  format: date
-                  description: 선택 사항
-                  example: "2025-11-05"
-                category:
-                  type: string
-                  example: "육류"
+                  nullable: true
+                  enum: [채소, 과일, 육류, 해산물, 유제품, 소스, 양념, 음료, 냉동식품, 기타]
+                  description: 저장 카테고리 (선택사항)
+                  example: "유제품"
             example:
-              name: "돼지고기 목살"
-              quantity: "300g"
-              expiryDate: "2025-11-05"
-              category: "육류"
+              name: "우유"
+              quantity: "1L"
+              storageCategory: "유제품"
       responses:
-        '200':
+        "200":
           description: 재료 추가 성공
           content:
             application/json:
@@ -430,42 +531,193 @@ paths:
                 properties:
                   id:
                     type: integer
-                    description: 생성된 재료에 대한 ID
-                    example: 101
+                    description: 생성된 재료 ID
+                    example: 18
                   name:
                     type: string
-                    example: "계란"
+                    description: 재료 이름
+                    example: "우유"
                   quantity:
                     type: string
-                    example: "5개"
-                  category:
+                    description: 수량
+                    example: "1L"
+                  storageCategory:
                     type: string
-                    example: "신선식품"
-                  expiryDate:
+                    description: 저장 카테고리
+                    example: "유제품"
+                  fridgeSlot:
                     type: string
-                    format: date
-                    example: "2025-11-10"
+                    description: 냉장고 선반 위치 (백엔드가 자동 할당)
+                    enum:
+                      [
+                        MAIN_SHELF_1,
+                        MAIN_SHELF_2,
+                        MAIN_SHELF_3,
+                        CRISPER_DRAWER,
+                        FREEZER_TOP,
+                        DOOR_SHELF_1,
+                        DOOR_SHELF_2,
+                        DOOR_SHELF_3,
+                        DOOR_SHELF_4,
+                      ]
+                    example: "MAIN_SHELF_2"
                   inputMethod:
                     type: string
-                    enum: [OCR, MANUAL]
-                    description: OCR 또는 MANUAL
-                    example: "OCR"
+                    enum: [MANUAL]
+                    description: 입력 방법 (수동 추가는 항상 MANUAL)
+                    example: "MANUAL"
               example:
-                id: 101
-                name: "계란"
-                quantity: "5개"
-                category: "신선식품"
-                expiryDate: "2025-11-10"
-                inputMethod: "OCR"
-        '400':
+                id: 18
+                name: "우유"
+                quantity: "1L"
+                storageCategory: "유제품"
+                fridgeSlot: "MAIN_SHELF_2"
+                inputMethod: "MANUAL"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
                 type: object
-  /fridge/ocr:
+  /fridge/batch:
+    post:
+      summary: 재료 수동 추가 (여러개)
+      tags:
+        - fridge
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - quantity
+                    properties:
+                      name:
+                        type: string
+                        description: 재료 이름
+                        example: "우유"
+                      quantity:
+                        type: string
+                        description: 수량
+                        example: "1L"
+                      expiryDate:
+                        type: string
+                        format: date
+                        nullable: true
+                        description: 유통기한 (YYYY-MM-DD 형식 또는 null)
+                        example: "2025-12-31"
+                      storageCategory:
+                        type: string
+                        nullable: true
+                        enum: [채소, 과일, 육류, 해산물, 유제품, 소스, 양념, 음료, 냉동식품, 기타]
+                        description: 저장 카테고리 (선택 사항, null 가능)
+                        example: "유제품"
+            example:
+              items:
+                - name: "우유"
+                  quantity: "1L"
+                  expiryDate: "2025-12-31"
+                  storageCategory: null
+                - name: "딸기"
+                  quantity: "500g"
+                  expiryDate: null
+                  storageCategory: "과일"
+                - name: "삼겹살"
+                  quantity: "600g"
+                  expiryDate: "2025-12-25"
+                  storageCategory: "육류"
+      responses:
+        "200":
+          description: 재료 일괄 추가 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saved:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: 생성된 재료 ID
+                          example: 19
+                        name:
+                          type: string
+                          description: 재료 이름
+                          example: "우유"
+                        quantity:
+                          type: string
+                          description: 수량
+                          example: "1L"
+                        storageCategory:
+                          type: string
+                          nullable: true
+                          description: 저장 카테고리
+                          example: "유제품"
+                        fridgeSlot:
+                          type: string
+                          description: 냉장고 선반 위치 (백엔드가 자동 할당)
+                          enum:
+                            [
+                              MAIN_SHELF_1,
+                              MAIN_SHELF_2,
+                              MAIN_SHELF_3,
+                              CRISPER_DRAWER,
+                              FREEZER_TOP,
+                              DOOR_SHELF_1,
+                              DOOR_SHELF_2,
+                              DOOR_SHELF_3,
+                              DOOR_SHELF_4,
+                            ]
+                          example: "MAIN_SHELF_2"
+                        inputMethod:
+                          type: string
+                          enum: [MANUAL]
+                          description: 입력 방법 (수동 추가는 항상 MANUAL)
+                          example: "MANUAL"
+              example:
+                saved:
+                  - id: 19
+                    name: "우유"
+                    quantity: "1L"
+                    storageCategory: null
+                    fridgeSlot: "MAIN_SHELF_2"
+                    inputMethod: "MANUAL"
+                  - id: 20
+                    name: "딸기"
+                    quantity: "500g"
+                    storageCategory: "과일"
+                    fridgeSlot: "CRISPER_DRAWER"
+                    inputMethod: "MANUAL"
+                  - id: 21
+                    name: "삼겹살"
+                    quantity: "600g"
+                    storageCategory: "육류"
+                    fridgeSlot: "MAIN_SHELF_3"
+                    inputMethod: "MANUAL"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+  /fridge/ocr-auto-place:
     post:
       summary: OCR 영수증/사진 인식 요청
+      description: 영수증/라벨 이미지를 업로드하면 OCR로 품목을 추출·정규화하고 DB에 저장한 뒤, LLM 배치 로직으로 fridgeSlot까지 자동 지정한다.
       tags:
         - fridge
       security:
@@ -477,45 +729,141 @@ paths:
             schema:
               type: object
               required:
-                - file
+                - image
               properties:
-                file:
+                image:
                   type: string
                   format: binary
-                  description: 영수증 사진
+                  description: 영수증/라벨 이미지 파일
       responses:
-        '200':
-          description: 사진 분석 완료 및 임시 재료 리스트 반환
+        "200":
+          description: OCR 분석 완료 및 재료 저장 완료
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  recognizedId:
+                  rawText:
                     type: string
-                    example: "temp_12345"
-                  items:
+                    description: OCR로 추출된 원본 텍스트
+                    example: "우유 1L, 딸기 500g, 삼겹살 600g..."
+                  saved:
                     type: array
+                    description: DB에 저장된 재료 목록
                     items:
                       type: object
                       properties:
+                        id:
+                          type: integer
+                          description: 저장된 재료 ID
+                          example: 0
                         name:
                           type: string
-                          example: "콩나물"
-                        confidence:
-                          type: number
-                          format: float
-                          example: 0.98
+                          description: 재료 이름
+                          example: "우유"
+                        quantity:
+                          type: string
+                          description: 수량
+                          example: "1L"
+                        storageCategory:
+                          type: string
+                          nullable: true
+                          description: 저장 카테고리
+                          example: "유제품"
+                        fridgeSlot:
+                          type: string
+                          nullable: true
+                          description: 냉장고 선반 위치 (LLM이 자동 지정)
+                          enum:
+                            [
+                              MAIN_SHELF_1,
+                              MAIN_SHELF_2,
+                              MAIN_SHELF_3,
+                              CRISPER_DRAWER,
+                              FREEZER_TOP,
+                              DOOR_SHELF_1,
+                              DOOR_SHELF_2,
+                              DOOR_SHELF_3,
+                              DOOR_SHELF_4,
+                            ]
+                          example: "MAIN_SHELF_2"
+                        inputMethod:
+                          type: string
+                          enum: [OCR]
+                          description: 입력 방법 (OCR)
+                          example: "OCR"
+                  placed:
+                    type: array
+                    description: 선반에 배치된 재료 목록
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: 재료 ID
+                          example: 0
+                        name:
+                          type: string
+                          description: 재료 이름
+                          example: "우유"
+                        storageCategory:
+                          type: string
+                          nullable: true
+                          description: 저장 카테고리
+                          example: "유제품"
+                        fridgeSlot:
+                          type: string
+                          description: 배치된 선반 위치
+                          enum:
+                            [
+                              MAIN_SHELF_1,
+                              MAIN_SHELF_2,
+                              MAIN_SHELF_3,
+                              CRISPER_DRAWER,
+                              FREEZER_TOP,
+                              DOOR_SHELF_1,
+                              DOOR_SHELF_2,
+                              DOOR_SHELF_3,
+                              DOOR_SHELF_4,
+                            ]
+                          example: "MAIN_SHELF_2"
+                  unplaced:
+                    type: array
+                    description: 선반에 배치되지 못한 재료 목록
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: 재료 ID
+                          example: 0
+                        name:
+                          type: string
+                          description: 재료 이름
+                          example: "딸기"
+                        reason:
+                          type: string
+                          description: 배치 실패 이유
+                          example: "카테고리 정보 부족"
               example:
-                recognizedId: "temp_12345"
-                items:
-                  - name: "콩나물"
-                    confidence: 0.98
-                  - name: "두부"
-                    confidence: 0.95
-                  - name: "삼겹살"
-                    confidence: 0.88
-        '400':
+                rawText: "우유 1L, 딸기 500g, 삼겹살 600g..."
+                saved:
+                  - id: 0
+                    name: "string"
+                    quantity: "string"
+                    storageCategory: "string"
+                    fridgeSlot: "string"
+                    inputMethod: "OCR"
+                placed:
+                  - id: 0
+                    name: "string"
+                    storageCategory: "string"
+                    fridgeSlot: "string"
+                unplaced:
+                  - id: 0
+                    name: "string"
+                    reason: "string"
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -570,7 +918,7 @@ paths:
               expiryDate: "2025-11-10"
               inputMethod: "OCR"
       responses:
-        '200':
+        "200":
           description: 수정 성공
           content:
             application/json:
@@ -605,7 +953,7 @@ paths:
                 category: "신선식품"
                 expiryDate: "2025-11-10"
                 inputMethod: "OCR"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -621,17 +969,17 @@ paths:
         - name: ingredientId
           in: path
           required: true
-          description: 재료 아이디
+          description: 재료 ID
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: 삭제 완료
           content:
             application/json:
               schema:
                 type: object
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -661,7 +1009,7 @@ paths:
             example:
               mustInclude: ["돼지고기", "김치"]
       responses:
-        '200':
+        "200":
           description: 추천 목록 반환 성공
           content:
             application/json:
@@ -768,7 +1116,7 @@ paths:
                   missingIngredients: []
                   cookTime: "12분"
                   difficulty: "초급"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -790,7 +1138,7 @@ paths:
             type: integer
             example: 2
       responses:
-        '200':
+        "200":
           description: 성공
           content:
             application/json:
@@ -897,7 +1245,7 @@ paths:
                   missingIngredients: []
                   cookTime: "22분"
                   difficulty: "초급"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -911,7 +1259,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 성공
           content:
             application/json:
@@ -1018,7 +1366,7 @@ paths:
                   missingIngredients: []
                   cookTime: "20분"
                   difficulty: "초급"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1049,7 +1397,7 @@ paths:
           schema:
             type: boolean
       responses:
-        '200':
+        "200":
           description: 레시피 검색 성공
           content:
             application/json:
@@ -1141,7 +1489,7 @@ paths:
                   missingIngredients: ["소갈비"]
                   cookTime: "90분"
                   difficulty: "고급"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1161,7 +1509,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: 상세 정보 반환 성공
           content:
             application/json:
@@ -1244,7 +1592,7 @@ paths:
                     content: "냄비에 기름을 두르고 볶는다."
                     imageUrl: "http://..."
                 isScrapped: true
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1265,13 +1613,13 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: 찜 등록 성공
           content:
             application/json:
               schema:
                 type: object
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1291,13 +1639,13 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: 찜 해제 성공
           content:
             application/json:
               schema:
                 type: object
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:

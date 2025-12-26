@@ -1,4 +1,4 @@
-import RecipeCard from './RecipeCard';
+import RecipeCard from "./RecipeCard";
 
 const RecipeGrid = ({ recipes, isLoading }) => {
   if (isLoading) {
@@ -14,7 +14,8 @@ const RecipeGrid = ({ recipes, isLoading }) => {
     );
   }
 
-  if (!recipes || recipes.length === 0) {
+  // recipes가 배열인지 확인
+  if (!recipes || !Array.isArray(recipes) || recipes.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
         <p>레시피가 없습니다.</p>
@@ -24,7 +25,7 @@ const RecipeGrid = ({ recipes, isLoading }) => {
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      {recipes.slice(0, 6).map((recipe) => (
+      {recipes.map((recipe) => (
         <RecipeCard key={recipe.recipeId} recipe={recipe} size="normal" />
       ))}
     </div>
@@ -32,4 +33,3 @@ const RecipeGrid = ({ recipes, isLoading }) => {
 };
 
 export default RecipeGrid;
-

@@ -1,27 +1,32 @@
 // 이태건: 냉장고 관련 API
-import axiosInstance from './axiosInstance';
+import axiosInstance from "./axiosInstance";
 
 export const fridgeAPI = {
   // 냉장고 재료 목록 조회
   getFridgeItems: () => {
-    return axiosInstance.get('/fridge');
+    return axiosInstance.get("/fridge");
   },
 
-  // OCR 영수증/사진 인식
-  recognizeReceipt: (file) => {
+  // 재료 수동 추가 (단일)
+  addIngredient: (ingredient) => {
+    return axiosInstance.post("/fridge", ingredient);
+  },
+
+  // 재료 수동 추가 (여러개)
+  addBatchIngredients: (items) => {
+    return axiosInstance.post("/fridge/batch", { items });
+  },
+
+  // OCR 영수증/사진 인식 요청
+  recognizeReceipt: (imageFile) => {
     const formData = new FormData();
-    formData.append('file', file);
-    
-    return axiosInstance.post('/fridge/ocr', formData, {
+    formData.append("image", imageFile);
+
+    return axiosInstance.post("/fridge/ocr-auto-place", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
-  },
-
-  // 재료 수동 추가
-  addIngredient: (ingredient) => {
-    return axiosInstance.post('/fridge', ingredient);
   },
 
   // 재료 수정
@@ -34,4 +39,3 @@ export const fridgeAPI = {
     return axiosInstance.delete(`/fridge/${ingredientId}`);
   },
 };
-

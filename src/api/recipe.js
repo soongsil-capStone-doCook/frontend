@@ -1,10 +1,10 @@
 // 서주원: 레시피 검색, 상세 정보
-import axiosInstance from './axiosInstance';
+import axiosInstance from "./axiosInstance";
 
 export const recipeAPI = {
   // 레시피 검색
   searchRecipes: (keyword, params = {}) => {
-    return axiosInstance.get('/recipes/search', {
+    return axiosInstance.get("recipes/recommend/search", {
       params: { keyword, ...params },
     });
   },
@@ -16,17 +16,16 @@ export const recipeAPI = {
 
   // 인기 레시피
   getPopularRecipes: () => {
-    return axiosInstance.get('/recipes/popular');
+    return axiosInstance.get("/recipes/popular");
   },
 
   // 추천 레시피
   getRecommendedRecipes: () => {
-    return axiosInstance.get('/recipes/recommended');
+    return axiosInstance.get("/recipes/recommended");
   },
 
-  // 찜 기반 유사 레시피 추천
+  // 찜 기반 레시피 추천 (메인 페이지용)
   getLikedRecommendations: () => {
-    return axiosInstance.get('/recipes/recommend/liked');
+    return axiosInstance.get("/recipes/recommend/scraps");
   },
 };
-

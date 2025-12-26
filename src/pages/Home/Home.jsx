@@ -29,7 +29,11 @@ const Home = () => {
       try {
         setIsLoadingLiked(true);
         const response = await recipeAPI.getLikedRecommendations();
-        setLikedRecipes(response.data || []);
+        // 실제 응답 형식: { isSuccess, code, message, result: [...] } 또는 배열 직접 반환
+        const recipesData = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data?.result || []);
+        setLikedRecipes(recipesData);
       } catch (error) {
         console.error('찜 기반 추천 레시피 로드 실패:', error);
         setLikedRecipes([]);
@@ -50,7 +54,11 @@ const Home = () => {
         const randomKeyword =
           keywords[Math.floor(Math.random() * keywords.length)];
         const response = await recipeAPI.searchRecipes(randomKeyword);
-        setRandomRecipes(response.data || []);
+        // 실제 응답 형식: { isSuccess, code, message, result: [...] } 또는 배열 직접 반환
+        const recipesData = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data?.result || []);
+        setRandomRecipes(recipesData);
       } catch (error) {
         console.error('랜덤 레시피 로드 실패:', error);
         setRandomRecipes([]);

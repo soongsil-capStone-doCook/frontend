@@ -1,14 +1,320 @@
+import { useNavigate } from "react-router-dom";
+import { useUserStore } from "../../store/useUserStore";
+import { useState } from "react";
+import axiosInstance from "../../api/axiosInstance";
+import { userAPI } from "../../api/user";
+// 온보딩 이미지 import
+import checkGender from "../../assets/images/onboarding/checkGender.png";
+import checkAge from "../../assets/images/onboarding/checkAge.png";
+import checkNonPrefer from "../../assets/images/onboarding/checkNonPrefer.png";
+import checkAllergy from "../../assets/images/onboarding/checkAllergy.png";
+// react-icons import
+import { FaMale, FaFemale } from "react-icons/fa";
+import OnboardingNextButton from "../../components/onboarding/OnboardingNextButton";
+import OnboardingPreviousButton from "../../components/onboarding/OnboardingPreviousButton";
+import OnboardingCompleteButton from "../../components/onboarding/OnboardingCompleteButton";
+
 // 이태건: 온보딩 페이지
 const Onboarding = () => {
+  const navigate = useNavigate();
+  const { isLoggined } = useUserStore();
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    gender: "",
+    age: "",
+    nonPrefer: "",
+    allergy: "",
+  });
+
+  console.log("로그인 여부", isLoggined);
+  // useEffect(() => {
+  //   if (!isLoggined) {
+  //     navigate("/login");
+  //   }
+  // }, [isLoggined, navigate]);
+
+  // 다음 단계로 이동
+  const handleNext = () => {
+    if (step < 4) {
+      setStep(step + 1);
+    }
+    if (step === 4) {
+      handleComplete();
+    }
+  };
+
+  // 이전 단계로 이동
+  const handlePrevious = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  // 온보딩 완료 처리 (성환이 노션 API 구조 참고)
+  const handleComplete = async () => {
+    try {
+      // 문자열을 배열로 변환하는 헬퍼 함수
+      const parseArray = (str) => {
+        if (!str || str.trim() === "") return [];
+        return str
+          .split(",")
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0);
+      };
+      // 1. formData를 백엔드 형식으로 변환
+      const transformedData = {
+        gender: formData.gender === "male" ? "남자" : "여자",
+        age: formData.age,
+        dislikedIngredients: parseArray(formData.nonPrefer),
+        allergies: parseArray(formData.allergy),
+      };
+
+      // 백엔드로 전송되는 데이터 로그 출력
+      console.log("=== 온보딩 완료 - 백엔드로 전송되는 데이터 ===");
+      console.log("전송 데이터:", transformedData);
+      console.log("엔드포인트: PATCH /users/me/preferences");
+
+      // 2. PATCH /users/me/preferences로 데이터 저장
+      await userAPI.updatePreferences(transformedData);
+      console.log("데이터 저장 완료");
+
+      // 3. 저장 성공 후 GET /user/onboarding/check로 완료 여부 확인
+      const checkResponse = await axiosInstance.get("/user/onboarding/check");
+      console.log("완료 여부:", checkResponse.data.isOnboardingCompleted);
+
+      // 4. isOnboardingCompleted가 true면 메인 페이지로 이동
+      if (checkResponse.data.isOnboardingCompleted) {
+        navigate("/");
+      }
+    } catch (error) {
+      // 에러 처리
+      console.error("온보딩 에러:", error.response?.data || error.message);
+      alert(
+        error.response?.data?.message ||
+          "온보딩 완료 처리 중 문제가 발생했습니다."
+      );
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-start justify-center pt-32">
       <div className="w-full max-w-md p-6">
-        <h1 className="text-2xl font-bold mb-6">온보딩</h1>
         {/* 온보딩 내용 구현 */}
+        {step === 1 && (
+          <div>
+            <h1 className="text-center text-3xl font-extrabold mb-8 text-gray-900 drop-shadow-sm leading-tight break-keep max-w-md mx-auto tracking-tight">
+              성별을 선택해주세요
+            </h1>
+
+            <div className="flex justify-center mb-8">
+              <img src={checkGender} alt="checkGender" />
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setFormData({ ...formData, gender: "male" })}
+                className={`flex-1 py-4 px-6 rounded-xl border-2 transition-all ${
+                  formData.gender === "male"
+                    ? "border-blue-500 bg-blue-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-blue-300"
+                }`}
+              >
+                <div className="text-center">
+                  <div className="flex justify-center mb-2">
+                    <FaMale
+                      className={`text-4xl ${
+                        formData.gender === "male"
+                          ? "text-blue-600"
+                          : "text-gray-400"
+                      }`}
+                    />
+                  </div>
+                  <div
+                    className={`font-semibold ${
+                      formData.gender === "male"
+                        ? "text-blue-600"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    남성
+                  </div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setFormData({ ...formData, gender: "female" })}
+                className={`flex-1 py-4 px-6 rounded-xl border-2 transition-all ${
+                  formData.gender === "female"
+                    ? "border-pink-500 bg-pink-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-pink-300"
+                }`}
+              >
+                <div className="text-center">
+                  <div className="flex justify-center mb-2">
+                    <FaFemale
+                      className={`text-4xl ${
+                        formData.gender === "female"
+                          ? "text-pink-600"
+                          : "text-gray-400"
+                      }`}
+                    />
+                  </div>
+                  <div
+                    className={`font-semibold ${
+                      formData.gender === "female"
+                        ? "text-pink-600"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    여성
+                  </div>
+                </div>
+              </button>
+            </div>
+            {/* 1단계 버튼 */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+              <div className="flex justify-end items-center">
+                <OnboardingNextButton
+                  step={step}
+                  formData={formData}
+                  onNext={handleNext}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        {step === 2 && (
+          <div>
+            <h1 className="text-center text-3xl font-extrabold mb-8 text-gray-900 drop-shadow-sm leading-tight break-keep max-w-md mx-auto tracking-tight">
+              현재 나이를 알려주세요
+            </h1>
+
+            <div className="flex justify-center mb-8">
+              <img src={checkAge} alt="checkAge" />
+            </div>
+
+            {/* 나이 선택 버튼 */}
+            <div className="flex flex-col gap-4">
+              {["10대", "20대", "30대", "40대", "50대 이상"].map((age) => (
+                <button
+                  key={age}
+                  onClick={() => setFormData({ ...formData, age: age })}
+                  className={`w-full py-4 px-6 rounded-xl border-2 transition-all cursor-pointer ${
+                    formData.age === age
+                      ? "border-blue-500 bg-blue-50 shadow-md"
+                      : "border-gray-200 bg-white hover:border-blue-300"
+                  }`}
+                >
+                  <div
+                    className={`font-semibold text-center ${
+                      formData.age === age ? "text-blue-600" : "text-gray-700"
+                    }`}
+                  >
+                    {age}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* 2단계 버튼 */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+              <div className="flex justify-between items-center">
+                <OnboardingPreviousButton
+                  step={step}
+                  onPrevious={handlePrevious}
+                />
+                <OnboardingNextButton
+                  step={step}
+                  formData={formData}
+                  onNext={handleNext}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        {step === 3 && (
+          <div>
+            <h1 className="text-center text-3xl font-extrabold mb-8 text-gray-900 drop-shadow-sm leading-tight break-keep max-w-md mx-auto tracking-tight">
+              좋아하지 않는 음식을 알려주세요
+            </h1>
+
+            <div className="flex justify-center mb-8">
+              <img src={checkNonPrefer} alt="checkNonPrefer" />
+            </div>
+
+            {/* 비선호 음식 입력 텍스트박스 */}
+            <div className="mb-4">
+              <textarea
+                value={formData.nonPrefer}
+                onChange={(e) =>
+                  setFormData({ ...formData, nonPrefer: e.target.value })
+                }
+                placeholder="예: 오이, 당근, 브로콜리 (쉼표로 구분)"
+                className="w-full py-4 px-6 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none resize-none transition-all shadow-sm hover:border-gray-300 min-h-40"
+                rows="8"
+              />
+              <p className="text-sm text-gray-500 mt-2 text-center">
+                여러 음식은 쉼표(,)로 구분해주세요
+              </p>
+            </div>
+
+            {/* 3단계 버튼 */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+              <div className="flex justify-between items-center">
+                <OnboardingPreviousButton
+                  step={step}
+                  onPrevious={handlePrevious}
+                />
+                <OnboardingNextButton
+                  step={step}
+                  formData={formData}
+                  onNext={handleNext}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        {step === 4 && (
+          <div>
+            <h1 className="text-center text-3xl font-extrabold mb-8 text-gray-900 drop-shadow-sm leading-tight break-keep max-w-md mx-auto tracking-tight">
+              알레르기가 있는 음식이 있으신가요?
+            </h1>
+
+            <div className="flex justify-center mb-8">
+              <img src={checkAllergy} alt="checkAllergy" />
+            </div>
+
+            {/* 알레르기 입력 텍스트박스 */}
+            <div className="mb-4">
+              <textarea
+                value={formData.allergy}
+                onChange={(e) =>
+                  setFormData({ ...formData, allergy: e.target.value })
+                }
+                placeholder="예: 땅콩, 우유, 대두"
+                className="w-full py-4 px-6 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none resize-none transition-all shadow-sm hover:border-gray-300 min-h-40"
+                rows="8"
+              />
+              <p className="text-sm text-gray-500 mt-2 text-center">
+                여러 음식은 쉼표(,)로 구분해주세요
+              </p>
+            </div>
+
+            {/* 4단계 버튼 */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+              <div className="flex justify-between items-center">
+                <OnboardingPreviousButton
+                  step={step}
+                  onPrevious={handlePrevious}
+                />
+                <OnboardingCompleteButton onComplete={handleComplete} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default Onboarding;
-
