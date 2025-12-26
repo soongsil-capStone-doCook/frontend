@@ -1,10 +1,14 @@
 // 천재민: 마이페이지 메인
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { userAPI } from '../../api/user';
 import RecipeCard from '../../components/RecipeCard';
-import { HiExclamationCircle, HiXCircle, HiPencil } from 'react-icons/hi';
+import { useUserStore } from '../../store/useUserStore';
+import { HiExclamationCircle, HiXCircle, HiPencil, HiLogout, HiDotsVertical } from 'react-icons/hi';
 
 const MyPage = () => {
+  const navigate = useNavigate();
+  const { clearUser } = useUserStore();
   const [profile, setProfile] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -12,6 +16,8 @@ const MyPage = () => {
   const [error, setError] = useState(null);
   const [isPreferencesModalOpen, setIsPreferencesModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   // 내 정보 가져오기
   useEffect(() => {
@@ -113,6 +119,37 @@ const MyPage = () => {
     }
   };
 
+  // 로그아웃 처리
+  const handleLogout = () => {
+    setIsMenuOpen(false);
+    if (window.confirm('정말 로그아웃 하시겠습니까?')) {
+      clearUser();
+      navigate('/login');
+    }
+  };
+
+  // 메뉴 열기/닫기
+  const handleMenuToggle = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   return (
     <div className="min-h-screen bg-white pb-20">
       <div className="max-w-md mx-auto px-4 py-6">
@@ -132,7 +169,7 @@ const MyPage = () => {
           ) : profile ? (
             <div className="bg-gray-50 rounded-xl p-6">
               {/* 프로필 이미지 및 닉네임 */}
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-4 mb-6 relative">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-2xl font-bold">
                   {profile.nickname?.[0] || 'U'}
                 </div>
@@ -144,13 +181,40 @@ const MyPage = () => {
                     <p className="text-sm text-gray-600 mt-1">{profile.email}</p>
                   )}
                 </div>
-                <button
-                  onClick={() => setIsPreferencesModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                  <HiPencil size={16} />
-                  <span>수정</span>
-                </button>
+                
+                {/* 설정 메뉴 버튼 */}
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={handleMenuToggle}
+                    className="p-2 rounded-lg hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900"
+                    aria-label="메뉴 열기"
+                  >
+                    <HiDotsVertical size={24} />
+                  </button>
+
+                  {/* 드롭다운 메뉴 */}
+                  {isMenuOpen && (
+                    <div className="absolute right-0 top-12 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsPreferencesModalOpen(true);
+                        }}
+                        className="w-full px-4 py-2.5 text-left flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <HiPencil size={18} />
+                        <span className="text-sm font-medium">수정</span>
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2.5 text-left flex items-center gap-2 text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <HiLogout size={18} />
+                        <span className="text-sm font-medium">로그아웃</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 알레르기 정보 */}
@@ -219,20 +283,29 @@ const MyPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              {favorites.map((favorite) => (
-                <RecipeCard
-                  key={favorite.recipeId}
-                  recipe={{
-                    recipeId: favorite.recipeId,
-                    title: favorite.title,
-                    mainImage: favorite.mainImage || favorite.thumbnailUrl || favorite.thumbnail,
-                    cookTime: favorite.cookTime,
-                    difficulty: favorite.difficulty,
-                    isFavorite: true,
-                  }}
-                  size="normal"
-                />
-              ))}
+              {favorites.map((favorite) => {
+                // 이미지 URL 경로 중복 제거 (recipes//recipes/ -> recipes/)
+                let imageUrl = favorite.mainImage || favorite.thumbnailUrl || favorite.thumbnail;
+                if (imageUrl && typeof imageUrl === 'string') {
+                  // 경로 중복 제거: recipes//recipes/ -> recipes/
+                  imageUrl = imageUrl.replace(/recipes\/\/recipes\//g, 'recipes/');
+                }
+                
+                return (
+                  <RecipeCard
+                    key={favorite.recipeId}
+                    recipe={{
+                      recipeId: favorite.recipeId,
+                      title: favorite.title,
+                      mainImage: imageUrl,
+                      cookTime: favorite.cookTime,
+                      difficulty: favorite.difficulty,
+                      isFavorite: true,
+                    }}
+                    size="normal"
+                  />
+                );
+              })}
             </div>
           )}
         </section>
@@ -269,7 +342,7 @@ const PreferencesModal = ({ profile, onClose, onSave, isSaving }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
       {/* 배경 오버레이 */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -337,7 +410,7 @@ const PreferencesModal = ({ profile, onClose, onSave, isSaving }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSaving}
             >
               {isSaving ? '저장 중...' : '저장'}
