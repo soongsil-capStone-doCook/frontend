@@ -34,7 +34,9 @@ const Search = () => {
     const fetchProfile = async () => {
       try {
         const response = await userAPI.getMyProfile();
-        setProfile(response.data);
+        // 실제 응답 형식: { isSuccess, code, message, result: {...} }
+        const profileData = response.data?.result || response.data;
+        setProfile(profileData);
       } catch (error) {
         console.error("프로필 로드 실패:", error);
       }
