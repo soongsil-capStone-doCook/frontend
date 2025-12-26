@@ -18,14 +18,21 @@ paths:
             schema:
               type: object
               required:
-                - authorizationCode
+                - code
+                - redirectUri
               properties:
-                authorizationCode:
+                code:
                   type: string
                   description: 카카오 OAuth 2.0 인증 후 받은 authorization code
                   example: "abc123def456..."
+                redirectUri:
+                  type: string
+                  format: uri
+                  description: 카카오 인증 시 사용한 redirect URI (카카오 토큰 교환 시 동일한 URI 필요)
+                  example: "http://localhost:5173/login/kakao/callback"
             example:
-              authorizationCode: "abc123def456..."
+              code: "abc123def456..."
+              redirectUri: "http://localhost:5173/login/kakao/callback"
       responses:
         "200":
           description: 로그인 성공 및 토큰 발급
@@ -323,50 +330,71 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    favoriteId:
-                      type: integer
-                      description: 찜하기 고유 ID (삭제 요청 시 유용)
-                      example: 10
-                    recipeId:
-                      type: integer
-                      example: 501
-                    title:
-                      type: string
-                      example: "돼지고기 김치찌개"
-                    thumbnail:
-                      type: string
-                      format: uri
-                      example: "http://..."
-                    cookTime:
-                      type: string
-                      example: "30분"
-                    difficulty:
-                      type: string
-                      example: "중급"
-                    savedAt:
-                      type: string
-                      format: date-time
-                      description: 언제 찜했는지 (정렬용)
-                      example: "2023-10-27T10:00:00Z"
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  code:
+                    type: string
+                    example: "RECIPE_200"
+                  message:
+                    type: string
+                    example: "성공적으로 레시피를 조회했습니다."
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        recipeId:
+                          type: integer
+                          example: 3
+                        title:
+                          type: string
+                          example: "【간단반찬】꽈리고추 햄볶음 만들기~"
+                        description:
+                          type: string
+                          example: "단짠 밥도둑 꽈리고추 햄볶음 이에요~"
+                        mainImage:
+                          type: string
+                          format: uri
+                          example: "https://capstone-fridge.s3.ap-northeast-2.amazonaws.com/recipes/3/main.png"
+                        cookTime:
+                          type: string
+                          example: "10분 이내"
+                        difficulty:
+                          type: string
+                          example: "아무나"
+                        servings:
+                          type: string
+                          nullable: true
+                          example: null
+                        missingIngredients:
+                          type: array
+                          items:
+                            type: string
+                          example: []
               example:
-                - favoriteId: 10
-                  recipeId: 501
-                  title: "돼지고기 김치찌개"
-                  thumbnail: "http://..."
-                  cookTime: "30분"
-                  difficulty: "중급"
-                  savedAt: "2023-10-27T10:00:00Z"
-                - favoriteId: 12
-                  recipeId: 505
-                  title: "김치 제육볶음"
-                  thumbnail: "http://..."
-                  cookTime: "20분"
-                  difficulty: "초급"
-                  savedAt: "2023-10-26T15:30:00Z"
+                isSuccess: true
+                code: "RECIPE_200"
+                message: "성공적으로 레시피를 조회했습니다."
+                result:
+                  - recipeId: 3
+                    title: "【간단반찬】꽈리고추 햄볶음 만들기~"
+                    description: "단짠 밥도둑 꽈리고추 햄볶음 이에요~"
+                    mainImage: "https://capstone-fridge.s3.ap-northeast-2.amazonaws.com/recipes/3/main.png"
+                    cookTime: "10분 이내"
+                    difficulty: "아무나"
+                    servings: null
+                    missingIngredients: []
+                  - recipeId: 59
+                    title: "차돌박이떡볶음으로 즐기는 특별한요리"
+                    description: "달콤하고 짭조름한 맛이 일품인 차돌박이 떡볶음입니다."
+                    mainImage: "https://capstone-fridge.s3.ap-northeast-2.amazonaws.com/recipes/59/main.png"
+                    cookTime: "20분 이내"
+                    difficulty: "아무나"
+                    servings: null
+                    missingIngredients: []
         "400":
           description: Bad Request
           content:
@@ -542,9 +570,6 @@ paths:
                 id: 18
                 name: "우유"
                 quantity: "1L"
-                storageCategory: "유제품"
-                fridgeSlot: "MAIN_SHELF_2"
-                inputMethod: "MANUAL"
                 storageCategory: "유제품"
                 fridgeSlot: "MAIN_SHELF_2"
                 inputMethod: "MANUAL"

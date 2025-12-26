@@ -31,8 +31,11 @@ const KakaoCallback = () => {
       }
 
       try {
-        // 3. 백엔드로 code 전송
-        const response = await authAPI.kakaoLogin(code); //!
+        // 3. redirectUri 생성 (카카오 인증 시 사용한 것과 동일해야 함)
+        const redirectUri = `${window.location.origin}/login/kakao/callback`;
+        
+        // 4. 백엔드로 code와 redirectUri 전송
+        const response = await authAPI.kakaoLogin(code, redirectUri);
 
         // 4. 응답에서 데이터 추출
         const data = response.data;
@@ -42,8 +45,16 @@ const KakaoCallback = () => {
         console.log("isNewMember:", data.isNewMember);
         console.log("user:", data.user);
 
-        // 5. authorization code 저장
-        localStorage.setItem("authorizationCode", code);
+        // 5. 서버에서 받은 accessToken 저장 (카카오 인증 코드가 아닌 서버 토큰)
+        if (data.accessToken) {
+          localStorage.setItem("accessToken", data.accessToken);
+          console.log("✅ accessToken 저장 완료");
+        }
+        
+        // refreshToken도 저장 (선택사항)
+        if (data.refreshToken) {
+          localStorage.setItem("refreshToken", data.refreshToken);
+        }
 
         setIsLoggined(true);
         setUser(data.user);

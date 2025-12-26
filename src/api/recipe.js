@@ -4,7 +4,7 @@ import axiosInstance from "./axiosInstance";
 export const recipeAPI = {
   // 레시피 검색
   searchRecipes: (keyword, params = {}) => {
-    return axiosInstance.get("/recipes/search", {
+    return axiosInstance.get("recipes/recommend/search", {
       params: { keyword, ...params },
     });
   },
@@ -26,6 +26,6 @@ export const recipeAPI = {
 
   // 찜 기반 레시피 추천 (메인 페이지용)
   getLikedRecommendations: () => {
-    return axiosInstance.get("/recipes/recommend/liked");
+    return axiosInstance.get("/recipes/recommend/scraps");
   },
 };

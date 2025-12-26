@@ -3,8 +3,11 @@ import axiosInstance from "./axiosInstance";
 
 export const authAPI = {
   // 카카오 로그인 (인증 코드로 로그인)
-  kakaoLogin: (code) => {
-    return axiosInstance.post("/auth/login/kakao", { authorizationCode: code });
+  kakaoLogin: (code, redirectUri) => {
+    return axiosInstance.post("/auth/login/kakao", { 
+      code: code,
+      redirectUri: redirectUri 
+    });
   },
 
   // 로그인

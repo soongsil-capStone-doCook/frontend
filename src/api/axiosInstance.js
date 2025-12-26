@@ -12,10 +12,11 @@ const axiosInstance = axios.create({
 // 요청 인터셉터
 axiosInstance.interceptors.request.use(
   (config) => {
-    // authorization code가 있으면 사용, 없으면 더미 코드 사용 (임시 조치)
-    const authorizationCode =
-      localStorage.getItem("authorizationCode") || "dummy-code-for-dev";
-    config.headers.Authorization = `Bearer ${authorizationCode}`;
+    // 서버에서 받은 accessToken 사용
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
     return config;
   },
   (error) => {
@@ -29,9 +30,10 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
-    // 401 에러 시 authorization code 제거 (자동 리다이렉트 제거)
+    // 401 에러 시 accessToken 제거 (자동 리다이렉트 제거)
     if (error.response?.status === 401) {
-      localStorage.removeItem("authorizationCode");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
     }
     return Promise.reject(error);
   }

@@ -7,9 +7,9 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // authorization code 확인 및 사용자 정보 로드
-    const authorizationCode = localStorage.getItem('authorizationCode');
-    if (authorizationCode) {
+    // accessToken 확인 및 사용자 정보 로드
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
       // 사용자 정보 로드 로직
       setIsLoading(false);
     } else {
@@ -22,7 +22,8 @@ export const useAuth = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem('authorizationCode');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     clearUser();
   };
 

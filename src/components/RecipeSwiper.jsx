@@ -15,7 +15,8 @@ const RecipeSwiper = ({ recipes, isLoading }) => {
     );
   }
 
-  if (!recipes || recipes.length === 0) {
+  // recipes가 배열인지 확인
+  if (!recipes || !Array.isArray(recipes) || recipes.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
         <p>추천 레시피가 없습니다.</p>

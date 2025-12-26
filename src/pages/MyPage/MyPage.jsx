@@ -49,7 +49,9 @@ const MyPage = () => {
       try {
         setIsLoadingFavorites(true);
         const response = await userAPI.getFavoriteRecipes();
-        setFavorites(response.data || []);
+        // 실제 응답 형식: { isSuccess, code, message, result: [...] }
+        const favoritesData = response.data?.result || response.data || [];
+        setFavorites(favoritesData);
       } catch (err) {
         console.error('찜한 레시피 로드 실패:', err);
       } finally {
@@ -157,11 +159,11 @@ const MyPage = () => {
             <div className="grid grid-cols-2 gap-3">
               {favorites.map((favorite) => (
                 <RecipeCard
-                  key={favorite.favoriteId || favorite.recipeId}
+                  key={favorite.recipeId}
                   recipe={{
                     recipeId: favorite.recipeId,
                     title: favorite.title,
-                    thumbnail: favorite.thumbnail,
+                    mainImage: favorite.mainImage || favorite.thumbnail, // mainImage 우선 사용
                     cookTime: favorite.cookTime,
                     difficulty: favorite.difficulty,
                     isFavorite: true,

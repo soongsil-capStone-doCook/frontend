@@ -126,8 +126,13 @@ const Search = () => {
         excludeAllergy: excludeAllergy,
       });
 
+      // 실제 응답 형식: { isSuccess, code, message, result: [...] } 또는 배열 직접 반환
+      const recipesData = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.result || []);
+
       // 클라이언트 사이드 필터링 (Mock API 대응)
-      let filteredRecipes = response.data || [];
+      let filteredRecipes = recipesData;
 
       // 키워드가 레시피 제목, 설명, 재료에 포함되는지 확인
       if (searchKeywords.length > 0) {
