@@ -601,7 +601,6 @@ paths:
                     type: object
                     required:
                       - name
-                      - quantity
                     properties:
                       name:
                         type: string
@@ -609,7 +608,8 @@ paths:
                         example: "우유"
                       quantity:
                         type: string
-                        description: 수량
+                        nullable: true
+                        description: 수량 (선택 사항, null 가능)
                         example: "1L"
                       expiryDate:
                         type: string

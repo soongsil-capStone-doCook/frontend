@@ -1,6 +1,7 @@
 // 이태건: 냉장고 메인 페이지
 import { useUserStore } from "../../store/useUserStore";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fridgeAPI } from "../../api/fridge";
 import myRefrigerator from "../../assets/images/refrigerator/myRefrigerator.png";
 import testMilk from "../../assets/images/refrigerator/testMilk.png";
@@ -23,68 +24,83 @@ import {
 const MyRefrigerator = () => {
   const { user } = useUserStore();
   const nickname = user?.nickname || "사용자";
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
 
-  // 재료 목록 조회
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        setIsLoading(true);
-        // 냉장고 재료 목록 조회
-        const response = await fridgeAPI.getFridgeItems();
-        setItems(response.data.items || []);
-      } catch (error) {
-        console.error("재료 목록 조회 실패:", error);
-        setItems([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchItems();
-  }, []);
-
-  // 재료 추가 후 목록 새로고침
-  const refreshItems = async () => {
-    try {
-      setIsLoading(true);
+  // TanStack Query로 재료 목록 조회 (자동 캐싱)
+  const {
+    data: fridgeData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["fridgeItems"],
+    queryFn: async () => {
       const response = await fridgeAPI.getFridgeItems();
-      //console.log("목록 조회 응답:", response.data);
-      console.log("items 배열:", response.data.items);
-      setItems(response.data.items || []);
-    } catch (error) {
-      console.error("재료 목록 조회 실패:", error);
-      setItems([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return response.data.items || [];
+    },
+    staleTime: 1000 * 60 * 5, // 5분간 신선한 상태 유지
+  });
 
-  // 모달에서 재료 추가 처리
-  const handleAddIngredient = async (formData) => {
-    try {
+  const items = fridgeData || [];
+
+  // 재료 추가 Mutation
+  const addIngredientMutation = useMutation({
+    mutationFn: async (ingredientsData) => {
       console.log("=== 재료 추가 - 백엔드로 전송될 데이터 ===");
-      console.log("엔드포인트: POST /fridge");
-      console.log("Request Body:", formData);
-      // 단일 재료 추가 연동
-      const response = await fridgeAPI.addIngredient(formData);
-      console.log("재료 추가 성공:", response.data);
+
+      // 단일 재료인 경우
+      if (ingredientsData.length === 1) {
+        console.log("엔드포인트: POST /fridge");
+        console.log("Request Body:", ingredientsData[0]);
+        const response = await fridgeAPI.addIngredient(ingredientsData[0]);
+        console.log("재료 추가 성공:", response.data);
+        return response.data;
+      }
+      // 다중 재료인 경우
+      else {
+        console.log("엔드포인트: POST /fridge/batch");
+        console.log("Request Body:", { items: ingredientsData });
+        const response = await fridgeAPI.addBatchIngredients(ingredientsData);
+        console.log("다중 재료 추가 성공:", response.data);
+        return response.data;
+      }
+    },
+    onSuccess: () => {
+      // 캐시 무효화 및 재조회
+      queryClient.invalidateQueries({ queryKey: ["fridgeItems"] });
       setIsModalOpen(false);
-      await refreshItems();
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error("재료 추가 실패:", error);
       alert("재료 추가에 실패했습니다. 다시 시도해주세요.");
-    }
+    },
+  });
+
+  // 모달에서 재료 추가 처리
+  const handleAddIngredient = (ingredientsData) => {
+    addIngredientMutation.mutate(ingredientsData);
+  };
+
+  // 재료 목록 새로고침 (삭제 후 사용)
+  const refreshItems = () => {
+    queryClient.invalidateQueries({ queryKey: ["fridgeItems"] });
   };
 
   console.log("현재 보유 식재로: ", items);
 
-  const isEmpty = !isLoading && items.length === 0;
+  // useMemo로 isEmpty 메모이제이션
+  const isEmpty = useMemo(
+    () => !isLoading && items.length === 0,
+    [isLoading, items.length]
+  );
+
+  if (error) {
+    console.error("재료 목록 조회 실패:", error);
+  }
 
   return (
     <div className="min-h-screen relative">
