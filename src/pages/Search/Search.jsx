@@ -377,13 +377,13 @@ const Search = () => {
           <button
             onClick={handleFridgeSearch}
             disabled={isLoading}
-            className="w-full mb-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full mb-4 bg-white border-2 border-gray-800 text-gray-900 rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="flex items-center justify-center gap-3">
-              <BiFridge size={24} />
+              <BiFridge size={24} className="text-gray-700" />
               <div className="text-left">
                 <div className="font-bold text-base">냉장고 재료로 검색</div>
-                <div className="text-xs text-blue-100">
+                <div className="text-xs text-gray-600">
                   냉장고에 있는 재료로 만들 수 있는 레시피
                 </div>
               </div>
