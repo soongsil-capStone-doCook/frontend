@@ -1,12 +1,28 @@
-# React + Vite
+## 📌 프로젝트 소개
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**냉장고에 뭐 있니?**는 냉장고 속 재료를 효율적으로 관리하고, 현재 가진 재료로 만들 수 있는 레시피를 추천해주는 스마트 음식 관리 서비스입니다.
 
-Currently, two official plugins are available:
+### 🎯 주요 기능
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+#### 🧊 스마트 냉장고 관리
+- **직관적인 UI**: 실제 냉장고 이미지를 활용한 시각적 재료 관리
+- **수동 추가**: 재료 이름, 수량, 카테고리를 입력하여 재료 추가
+- **다중 추가**: 한 번에 여러 재료를 등록 가능
+- **위치 기반 배치**: 냉장실, 냉동실, 문쪽 선반 등 실제 위치에 맞게 재료 배치
+- **간편한 삭제**: 불필요한 재료는 클릭 한 번으로 삭제
 
-## Expanding the ESLint configuration
+#### 🤖 AI 영수증 인식 (OCR)
+- **자동 재료 추출**: 영수증 사진만 찍으면 AI가 자동으로 재료를 인식
+- **스마트 배치**: 인식된 재료를 카테고리별로 냉장고에 자동 배치
+- **오인식 수정**: 잘못 인식된 재료는 즉시 삭제 가능
+- **실시간 미리보기**: 인식 결과를 바로 확인하고 승인
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+#### 🍽️ 맞춤형 레시피 추천
+- **보유 재료 기반**: 현재 냉장고에 있는 재료로 만들 수 있는 레시피 추천
+- **레시피 상세 정보**: 조리 시간, 난이도, 재료 목록, 조리 방법 제공
+- **검색 기능**: 원하는 레시피를 직접 검색
+- **좋아요 기능**: 마음에 드는 레시피를 저장
+
+#### 🔐 간편 로그인
+- **카카오 소셜 로그인**: 복잡한 회원가입 없이 카카오 계정으로 간편 로그인
+- **온보딩 시스템**: 첫 사용자를 위한 친절한 가이드
