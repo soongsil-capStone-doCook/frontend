@@ -172,6 +172,27 @@ const RecipeCard = ({ recipe, size = "normal" }) => {
           {recipe.title}
         </h3>
 
+        {/* 부족한 재료 표시 */}
+        {recipe.missingIngredients && recipe.missingIngredients.length > 0 && (
+          <div className="mb-2">
+            <div className="flex flex-wrap gap-1">
+              {recipe.missingIngredients.slice(0, 3).map((ingredient, idx) => (
+                <span
+                  key={idx}
+                  className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full"
+                >
+                  {ingredient}
+                </span>
+              ))}
+              {recipe.missingIngredients.length > 3 && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                  +{recipe.missingIngredients.length - 3}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 조리시간, 난이도 (일반 카드용) */}
         {!isLarge && (
           <div className="flex items-center gap-4">
