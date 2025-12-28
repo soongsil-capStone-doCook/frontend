@@ -114,27 +114,27 @@ const Search = () => {
       setKeywords([]); // 키워드 초기화
       setKeyword(""); // 입력창 초기화
 
-      console.log('=== 냉장고 기반 검색 API 호출 ===');
-      console.log('엔드포인트: GET /recipes/recommend/fridge/missing');
-      
+      console.log("=== 냉장고 기반 검색 API 호출 ===");
+      console.log("엔드포인트: GET /recipes/recommend/fridge/missing");
+
       const response = await recipeAPI.getMissingRecommendations();
-      
-      console.log('응답 데이터:', response.data);
-      
+
+      console.log("응답 데이터:", response.data);
+
       // BaseResponse 형식: { isSuccess, code, message, result: [...] }
       const recipesData = response.data?.result || [];
-      
-      console.log('추출된 레시피 데이터:', recipesData);
-      
+
+      console.log("추출된 레시피 데이터:", recipesData);
+
       setRecipes(recipesData);
       setCurrentPage(1);
 
-      // URL 업데이트
-      setSearchParams({ keyword: "냉장고재료" });
+      // URL 파라미터 제거 (냉장고 기반 검색은 키워드 검색이 아님)
+      setSearchParams({});
     } catch (error) {
       console.error("냉장고 기반 검색 실패:", error);
       if (error.response?.status === 401) {
-        alert('로그인이 필요한 서비스입니다.');
+        alert("로그인이 필요한 서비스입니다.");
       }
       setRecipes([]);
     } finally {
@@ -166,9 +166,9 @@ const Search = () => {
       });
 
       // 실제 응답 형식: { isSuccess, code, message, result: [...] } 또는 배열 직접 반환
-      const recipesData = Array.isArray(response.data) 
-        ? response.data 
-        : (response.data?.result || []);
+      const recipesData = Array.isArray(response.data)
+        ? response.data
+        : response.data?.result || [];
 
       // 클라이언트 사이드 필터링 (Mock API 대응)
       let filteredRecipes = recipesData;
