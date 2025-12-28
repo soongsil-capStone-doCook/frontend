@@ -5,18 +5,18 @@
 export const fridgeSlotPositions = {
   // 냉장실 선반들 9개
   MAIN_SHELF_1: {
-    // 완료
-    top: "68%",
+    // 완료 - 냉장실 상단 선반
+    top: "52%",
     left: "20%",
   },
   MAIN_SHELF_2: {
-    // 완료
-    top: "61%", // 냉장실 가운데 선반
+    // 완료 - 냉장실 중단 선반
+    top: "61%",
     left: "20%",
   },
   MAIN_SHELF_3: {
-    // 완료
-    top: "52%", // 냉장실 아랫 선반
+    // 완료 - 냉장실 하단 선반
+    top: "68%",
     left: "20%",
   },
 
