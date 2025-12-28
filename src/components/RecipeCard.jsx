@@ -9,6 +9,7 @@ const RecipeCard = ({ recipe, size = "normal", onUnfavorite }) => {
   const navigate = useNavigate();
   const isLarge = size === "large";
   const [imageError, setImageError] = useState(false);
+  const [showAllIngredients, setShowAllIngredients] = useState(false);
 
   const handleCardClick = () => {
     navigate(`/recipe/${recipe.recipeId}`);
@@ -153,8 +154,8 @@ const RecipeCard = ({ recipe, size = "normal", onUnfavorite }) => {
         {/* 일반 카드용 찜하기 버튼 (normal일 때만) */}
         {!isLarge && (
           <div className="absolute top-3 right-3 z-10">
-            <LikeButton 
-              recipeId={recipe.recipeId} 
+            <LikeButton
+              recipeId={recipe.recipeId}
               initialLiked={recipe.isScrapped || recipe.scrapped || false}
               onToggle={(newLikedState) => {
                 // 찜하기 취소 시 부모 컴포넌트에 알림 (마이페이지에서 목록 제거용)
@@ -185,7 +186,10 @@ const RecipeCard = ({ recipe, size = "normal", onUnfavorite }) => {
         {recipe.missingIngredients && recipe.missingIngredients.length > 0 && (
           <div className="mb-2">
             <div className="flex flex-wrap gap-1">
-              {recipe.missingIngredients.slice(0, 3).map((ingredient, idx) => (
+              {(showAllIngredients
+                ? recipe.missingIngredients
+                : recipe.missingIngredients.slice(0, 3)
+              ).map((ingredient, idx) => (
                 <span
                   key={idx}
                   className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full"
@@ -194,9 +198,17 @@ const RecipeCard = ({ recipe, size = "normal", onUnfavorite }) => {
                 </span>
               ))}
               {recipe.missingIngredients.length > 3 && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full">
-                  +{recipe.missingIngredients.length - 3}
-                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAllIngredients(!showAllIngredients);
+                  }}
+                  className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                >
+                  {showAllIngredients
+                    ? "접기"
+                    : `펼치기 +${recipe.missingIngredients.length - 3}`}
+                </button>
               )}
             </div>
           </div>
