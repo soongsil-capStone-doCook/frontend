@@ -44,41 +44,59 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        {/* 로그인 헤더 */}
-        <div className="mb-12 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1.5 tracking-tight">
-            로그인
+    <div className="h-screen relative flex items-center justify-center px-4">
+      {/* 배경 이미지 */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('/doCookBackground2.png')`,
+        }}
+      >
+        {/* 오버레이 */}
+        <div 
+          className="absolute inset-0 bg-black/50"
+          style={{
+            backdropFilter: 'blur(2px)',
+            WebkitBackdropFilter: 'blur(2px)',
+          }}
+        ></div>
+      </div>
+
+      {/* 콘텐츠 */}
+      <div className="relative z-10 w-full max-w-md">
+        {/* 브랜드 로고 영역 */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">
+            냉장고에 뭐 있니?
           </h1>
-          <p className="text-sm text-gray-500 font-medium">
-            서비스 이용을 위해 로그인해주세요
+          <p className="text-lg text-white/90 font-medium drop-shadow-md">
+            나만의 냉장고 관리부터 AI 맞춤 레시피까지
           </p>
         </div>
 
-        {/* 로그인 박스 */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          {/* 카카오 로그인 버튼 */}
+        {/* 카카오 로그인 버튼 */}
+        <div className="flex justify-center">
           <button
             onClick={handleKakaoLogin}
-            className="w-full bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-gray-900 font-bold py-4 px-6 rounded-xl 
-            flex items-center justify-center gap-3 shadow-md hover:shadow-lg"
+            className="w-[75%] bg-[#FEE500] hover:bg-[#FDD835] active:bg-[#FBC02D] text-[#191919] font-bold py-3 px-5 rounded-xl 
+            flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99]"
           >
-            {/* 카카오 심볼 아이콘 */}
-            <svg
-              viewBox="0 0 32 32"
-              width="24"
-              height="24"
-              fill="currentColor"
-              className="flex-shrink-0"
-            >
-              <path d="M16 4C8.832 4 3 8.604 3 14.28c0 3.73 2.536 7.025 6.36 8.797l-1.306 4.81c-.13.48.44.857.818.59l5.59-3.95c.502.05 1.015.074 1.538.074 7.168 0 13-4.604 13-10.28C29 8.604 23.168 4 16 4z" />
-            </svg>
-            <span className="text-base">카카오로 시작하기</span>
+          {/* 카카오 심볼 아이콘 */}
+          <svg
+            viewBox="0 0 32 32"
+            width="20"
+            height="20"
+            fill="currentColor"
+            className="flex-shrink-0"
+          >
+            <path d="M16 4C8.832 4 3 8.604 3 14.28c0 3.73 2.536 7.025 6.36 8.797l-1.306 4.81c-.13.48.44.857.818.59l5.59-3.95c.502.05 1.015.074 1.538.074 7.168 0 13-4.604 13-10.28C29 8.604 23.168 4 16 4z" />
+          </svg>
+          <span className="text-sm">카카오로 시작하기</span>
           </button>
         </div>
 
-        <p className="text-xs text-gray-400 text-center mt-6">
+        {/* 하단 안내 문구 */}
+        <p className="text-xs text-white/80 text-center mt-6 drop-shadow-md">
           카카오 계정으로 간편하게 시작하세요
         </p>
       </div>

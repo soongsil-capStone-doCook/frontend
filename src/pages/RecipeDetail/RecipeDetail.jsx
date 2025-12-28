@@ -10,7 +10,6 @@ import {
   HiExclamationCircle,
 } from "react-icons/hi";
 import { MdLocalFireDepartment } from "react-icons/md";
-import { mockRecipes } from "../../mockRecipeData"; // [임시] Mock 데이터
 
 const RecipeDetail = () => {
   const { recipeId } = useParams();
@@ -27,46 +26,15 @@ const RecipeDetail = () => {
         setError(null);
         console.log("🔍 레시피 ID:", recipeId);
 
-        // [임시] Mock API가 동적 파라미터 처리 못함 - localStorage 캐시 + API 병합
-        // TODO: 백엔드 API 완성 후 제거
-        const recipeCache = localStorage.getItem("recipeCache");
-        let cachedData = null;
-
-        if (recipeCache) {
-          const recipesMap = JSON.parse(recipeCache);
-          cachedData = recipesMap[recipeId];
-          if (cachedData) {
-            console.log("💾 캐시 데이터 발견:", cachedData.title);
-          }
-        }
-
-        // [임시] 캐시 없으면 mockRecipes 사용 (개발용)
-        const mockData = mockRecipes[recipeId];
-        if (!cachedData && mockData) {
-          console.log("🎭 Mock 데이터 사용:", mockData.title);
-        }
-
-        // API 호출하여 steps와 isScrapped 가져오기
+        // API 호출하여 레시피 상세 정보 가져오기
         const response = await recipeAPI.getRecipeDetail(recipeId);
         console.log("✅ API 응답:", response.data);
 
         // 실제 응답 형식: { isSuccess, code, message, result: {...} }
         const apiData = response.data?.result || response.data;
 
-        // 병합 우선순위: 캐시(검색결과) > Mock(개발용) > API(기본)
-        const mergedRecipe = {
-          ...apiData, // 기본: API 데이터
-          ...(mockData || {}), // Mock 덮어쓰기 (없으면 스킵)
-          ...(cachedData || {}), // 캐시 덮어쓰기 (최우선)
-        };
-
-        console.log(
-          "🎉 최종 데이터:",
-          mergedRecipe.title,
-          "steps:",
-          mergedRecipe.steps?.length
-        );
-        setRecipe(mergedRecipe);
+        // API 데이터를 그대로 사용
+        setRecipe(apiData);
       } catch (err) {
         console.error("❌ 레시피 상세 정보 로드 실패:", err);
         console.error("❌ 에러 상세:", err.response?.data || err.message);
@@ -157,10 +125,18 @@ const RecipeDetail = () => {
 
         {/* 찜하기 버튼 */}
         <div className="absolute top-4 right-4">
-          <div className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
+          <div className="w-12 h-12 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
             <LikeButton
               recipeId={recipe.recipeId}
-              initialLiked={recipe.isScrapped}
+              initialLiked={recipe.isScrapped || recipe.scrapped}
+              onToggle={(newLikedState) => {
+                // 찜하기 상태 변경 시 레시피 데이터도 업데이트
+                setRecipe((prev) => ({
+                  ...prev,
+                  isScrapped: newLikedState,
+                  scrapped: newLikedState,
+                }));
+              }}
             />
           </div>
         </div>

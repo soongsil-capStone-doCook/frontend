@@ -1,6 +1,6 @@
-// 이태건: 재료 추가 모달
+// 이태건: 재료 추가 모달 (단일 및 다중 지원)
 import { useState } from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaPlus, FaMinus } from "react-icons/fa";
 
 const STORAGE_CATEGORIES = [
   "채소",
@@ -16,36 +16,55 @@ const STORAGE_CATEGORIES = [
 ];
 
 const AddIngredientModal = ({ isOpen, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    quantity: "",
-    storageCategory: "",
-  });
+  // 재료 배열로 관리 (기본 1개)
+  const [ingredients, setIngredients] = useState([
+    { name: "", quantity: "", storageCategory: "" },
+  ]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
+  // 특정 재료의 필드 값 변경
+  const handleChange = (index, field, value) => {
+    setIngredients((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
+  };
+
+  // 재료 추가
+  const handleAddIngredient = () => {
+    setIngredients((prev) => [
       ...prev,
-      [name]: value,
-    }));
+      { name: "", quantity: "", storageCategory: "" },
+    ]);
+  };
+
+  // 재료 제거
+  const handleRemoveIngredient = (index) => {
+    if (ingredients.length > 1) {
+      setIngredients((prev) => prev.filter((_, i) => i !== index));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.name) {
-      // 빈 문자열을 null로 변환
-      const submitData = {
-        name: formData.name,
-        quantity: formData.quantity?.trim() || null,
-        storageCategory: formData.storageCategory || null,
-      };
-      onSubmit(submitData);
-      setFormData({ name: "", quantity: "", storageCategory: "" });
-    }
+
+    // 이름이 있는 재료만 필터링
+    const validIngredients = ingredients.filter((item) => item.name.trim());
+
+    if (validIngredients.length === 0) return;
+
+    // 빈 문자열을 null로 변환
+    const processedIngredients = validIngredients.map((item) => ({
+      name: item.name.trim(),
+      quantity: item.quantity?.trim() || null,
+      storageCategory: item.storageCategory || null,
+    }));
+
+    onSubmit(processedIngredients);
+    // 초기화
+    setIngredients([{ name: "", quantity: "", storageCategory: "" }]);
   };
 
   const handleClose = () => {
-    setFormData({ name: "", quantity: "", storageCategory: "" });
+    setIngredients([{ name: "", quantity: "", storageCategory: "" }]);
     onClose();
   };
 
@@ -60,90 +79,115 @@ const AddIngredientModal = ({ isOpen, onClose, onSubmit }) => {
       />
 
       {/* 모달 컨텐츠 - scale up + fade in */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-[scaleUp_0.3s_ease-out]">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-[scaleUp_0.3s_ease-out] max-h-[90vh] overflow-y-auto">
         {/* 닫기 버튼 */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
         >
           <FaTimes size={20} />
         </button>
 
         {/* 헤더 */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-            재료 추가
-          </h2>
-          <p className="text-sm text-gray-500 font-medium mt-1">
-            새로운 식재료를 추가해주세요
-          </p>
+        <div className="mb-6 flex items-center justify-between pr-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+              재료 추가
+            </h2>
+            <p className="text-sm text-gray-500 font-medium mt-1">
+              새로운 식재료를 추가해주세요
+            </p>
+          </div>
+          {/* 재료 추가 버튼 */}
+          <button
+            type="button"
+            onClick={handleAddIngredient}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white p-2.5 rounded-lg transition-colors shadow-sm hover:shadow"
+            title="재료 추가"
+          >
+            <FaPlus size={14} />
+          </button>
         </div>
 
         {/* 폼 */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 음식 이름 */}
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-semibold text-gray-700 mb-2"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 재료 목록 */}
+          {ingredients.map((ingredient, index) => (
+            <div
+              key={index}
+              className="space-y-3 p-4 border border-gray-200 rounded-xl bg-gray-50/50"
             >
-              음식 이름
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="예: 우유, 사과, 계란"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              required
-            />
-          </div>
+              {/* 재료 헤더 */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-gray-600">
+                  재료 {index + 1}
+                </span>
+                {ingredients.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveIngredient(index)}
+                    className="text-red-500 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
+                    title="삭제"
+                  >
+                    <FaMinus size={12} />
+                  </button>
+                )}
+              </div>
 
-          {/* 양 */}
-          <div>
-            <label
-              htmlFor="quantity"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              양 <span className="text-gray-400 text-xs">(선택사항)</span>
-            </label>
-            <input
-              type="text"
-              id="quantity"
-              name="quantity"
-              value={formData.quantity}
-              onChange={handleChange}
-              placeholder="예: 1L, 500g, 10개 (선택사항)"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-            />
-          </div>
+              {/* 음식 이름 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  음식 이름
+                </label>
+                <input
+                  type="text"
+                  value={ingredient.name}
+                  onChange={(e) => handleChange(index, "name", e.target.value)}
+                  placeholder="예: 우유, 사과, 계란"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white text-sm"
+                  required
+                />
+              </div>
 
-          {/* 저장 카테고리 */}
-          <div>
-            <label
-              htmlFor="storageCategory"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              저장 카테고리{" "}
-              <span className="text-gray-400 text-xs">(선택사항)</span>
-            </label>
-            <select
-              id="storageCategory"
-              name="storageCategory"
-              value={formData.storageCategory}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
-            >
-              <option value="">카테고리를 선택해주세요 (선택사항)</option>
-              {STORAGE_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
+              {/* 양 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  양 <span className="text-gray-400 text-xs">(선택사항)</span>
+                </label>
+                <input
+                  type="text"
+                  value={ingredient.quantity}
+                  onChange={(e) =>
+                    handleChange(index, "quantity", e.target.value)
+                  }
+                  placeholder="예: 1L, 500g, 10개"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white text-sm"
+                />
+              </div>
+
+              {/* 저장 카테고리 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  저장 카테고리{" "}
+                  <span className="text-gray-400 text-xs">(선택사항)</span>
+                </label>
+                <select
+                  value={ingredient.storageCategory}
+                  onChange={(e) =>
+                    handleChange(index, "storageCategory", e.target.value)
+                  }
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white text-sm"
+                >
+                  <option value="">선택해주세요</option>
+                  {STORAGE_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          ))}
 
           {/* 버튼 그룹 */}
           <div className="flex gap-3 pt-4">

@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { recipeAPI } from "../../api/recipe";
 import RecipeGrid from "../../components/RecipeGrid";
 import { HiSearch, HiX, HiAdjustments } from "react-icons/hi";
+import { BiFridge } from "react-icons/bi";
 import { userAPI } from "../../api/user";
 
 const Search = () => {
@@ -105,6 +106,42 @@ const Search = () => {
     setKeywords(newKeywords);
   };
 
+  // 냉장고 재료 기반 검색
+  const handleFridgeSearch = async () => {
+    try {
+      setIsLoading(true);
+      setHasSearched(true);
+      setKeywords([]); // 키워드 초기화
+      setKeyword(""); // 입력창 초기화
+
+      console.log("=== 냉장고 기반 검색 API 호출 ===");
+      console.log("엔드포인트: GET /recipes/recommend/fridge/missing");
+
+      const response = await recipeAPI.getMissingRecommendations();
+
+      console.log("응답 데이터:", response.data);
+
+      // BaseResponse 형식: { isSuccess, code, message, result: [...] }
+      const recipesData = response.data?.result || [];
+
+      console.log("추출된 레시피 데이터:", recipesData);
+
+      setRecipes(recipesData);
+      setCurrentPage(1);
+
+      // URL 파라미터 업데이트
+      setSearchParams({});
+    } catch (error) {
+      console.error("냉장고 기반 검색 실패:", error);
+      if (error.response?.status === 401) {
+        alert("로그인이 필요한 서비스입니다.");
+      }
+      setRecipes([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // 검색 실행
   const handleSearch = async (searchKeywords = keywords) => {
     // 키워드가 없어도 검색 가능 (전체 레시피 조회)
@@ -128,13 +165,66 @@ const Search = () => {
         excludeAllergy: excludeAllergy,
       });
 
+      console.log("=== 일반 검색 API 응답 ===");
+      console.log("전체 응답:", response.data);
+
       // 실제 응답 형식: { isSuccess, code, message, result: [...] } 또는 배열 직접 반환
-      const recipesData = Array.isArray(response.data) 
-        ? response.data 
-        : (response.data?.result || []);
+      const recipesData = Array.isArray(response.data)
+        ? response.data
+        : response.data?.result || [];
+
+      console.log("추출된 레시피 데이터:", recipesData);
+      console.log(
+        "첫 번째 레시피의 missingIngredients:",
+        recipesData[0]?.missingIngredients
+      );
+
+      // 부족한 재료 정보 가져오기 (냉장고 기반 추천 API 활용)
+      let missingIngredientsMap = {};
+      try {
+        // 냉장고 기반 추천 API 두 개 모두 호출하여 최대한 많은 레시피 커버
+        const [fridgeResponse, missingResponse] = await Promise.all([
+          recipeAPI.getFridgeRecommendations(),
+          recipeAPI.getMissingRecommendations(),
+        ]);
+
+        const fridgeRecipes = fridgeResponse.data?.result || [];
+        const missingRecipes = missingResponse.data?.result || [];
+
+        console.log("냉장고 기반 레시피:", fridgeRecipes.length, "개");
+        console.log("부족한 재료 레시피:", missingRecipes.length, "개");
+
+        // 두 API 결과를 합쳐서 recipeId를 키로 하는 맵 생성
+        [...fridgeRecipes, ...missingRecipes].forEach((recipe) => {
+          // 덮어쓰기 방지: 이미 있으면 건너뛰기
+          if (
+            !(recipe.recipeId in missingIngredientsMap) &&
+            recipe.missingIngredients !== undefined
+          ) {
+            missingIngredientsMap[recipe.recipeId] = recipe.missingIngredients;
+          }
+        });
+
+        console.log("부족한 재료 맵:", missingIngredientsMap);
+        console.log(
+          "맵에 저장된 레시피 수:",
+          Object.keys(missingIngredientsMap).length
+        );
+      } catch (error) {
+        console.error("부족한 재료 정보 조회 실패:", error);
+      }
+
+      // 검색 결과에 부족한 재료 정보 병합
+      const recipesWithMissing = recipesData.map((recipe) => ({
+        ...recipe,
+        missingIngredients:
+          missingIngredientsMap[recipe.recipeId] ||
+          recipe.missingIngredients ||
+          [],
+      }));
 
       // 클라이언트 사이드 필터링 (Mock API 대응)
-      let filteredRecipes = recipesData;
+      let filteredRecipes = recipesWithMissing;
 
       // 키워드가 레시피 제목, 설명, 재료에 포함되는지 확인
       if (searchKeywords.length > 0) {
@@ -282,6 +372,23 @@ const Search = () => {
         {/* 헤더 */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">레시피 검색</h1>
+
+          {/* 냉장고 기반 검색 버튼 */}
+          <button
+            onClick={handleFridgeSearch}
+            disabled={isLoading}
+            className="w-full mb-4 bg-white border-2 border-gray-800 text-gray-900 rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <div className="flex items-center justify-center gap-3">
+              <BiFridge size={24} className="text-gray-700" />
+              <div className="text-left">
+                <div className="font-bold text-base">냉장고 재료로 검색</div>
+                <div className="text-xs text-gray-600">
+                  냉장고에 있는 재료로 만들 수 있는 레시피
+                </div>
+              </div>
+            </div>
+          </button>
 
           {/* 검색창 */}
           <div className="space-y-3">

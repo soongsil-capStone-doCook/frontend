@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { HiHome, HiOutlineHome } from "react-icons/hi";
 import { MdOutlineKitchen, MdKitchen } from "react-icons/md";
 import { FaCamera } from "react-icons/fa";
@@ -9,6 +10,7 @@ import { HiOutlineUser, HiUser } from "react-icons/hi";
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
 
@@ -70,6 +72,14 @@ const BottomNav = () => {
     return location.pathname.startsWith(path);
   };
 
+  const handleNavigation = (path) => {
+    // 냉장고 페이지로 이동 시 캐시 무효화
+    if (path === "/refrigerator") {
+      queryClient.invalidateQueries({ queryKey: ["fridgeItems"] });
+    }
+    navigate(path);
+  };
+
   return (
     <nav
       className={`fixed bottom-0 left-1/2 w-full max-w-md z-40 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 transition-transform duration-300 ease-in-out ${
@@ -89,7 +99,7 @@ const BottomNav = () => {
               return (
                 <button
                   key={item.path}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => handleNavigation(item.path)}
                   className="flex flex-col items-center justify-center relative -mt-8"
                 >
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
@@ -104,7 +114,7 @@ const BottomNav = () => {
             return (
               <button
                 key={item.path}
-                onClick={() => navigate(item.path)}
+                onClick={() => handleNavigation(item.path)}
                 className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 ${
                   active
                     ? "text-slate-700 scale-105"

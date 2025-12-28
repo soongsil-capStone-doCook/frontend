@@ -1,27 +1,27 @@
-import { useState, useEffect } from 'react';
-import { recipeAPI } from '../../api/recipe';
-import RecipeSwiper from '../../components/RecipeSwiper';
-import RecipeGrid from '../../components/RecipeGrid';
+import { useState, useEffect } from "react";
+import { recipeAPI } from "../../api/recipe";
+import RecipeSwiper from "../../components/RecipeSwiper";
+import RecipeGrid from "../../components/RecipeGrid";
+
+// 랜덤 키워드 목록 (컴포넌트 외부로 이동)
+const keywords = [
+  "김치찌개",
+  "파스타",
+  "볶음밥",
+  "샐러드",
+  "스테이크",
+  "치킨",
+  "피자",
+  "라면",
+  "떡볶이",
+  "비빔밥",
+];
 
 const Home = () => {
   const [likedRecipes, setLikedRecipes] = useState([]);
   const [randomRecipes, setRandomRecipes] = useState([]);
   const [isLoadingLiked, setIsLoadingLiked] = useState(true);
   const [isLoadingRandom, setIsLoadingRandom] = useState(true);
-
-  // 랜덤 키워드 목록
-  const keywords = [
-    '김치찌개',
-    '파스타',
-    '볶음밥',
-    '샐러드',
-    '스테이크',
-    '치킨',
-    '피자',
-    '라면',
-    '떡볶이',
-    '비빔밥',
-  ];
 
   // 찜 기반 추천 레시피 가져오기
   useEffect(() => {
@@ -30,12 +30,12 @@ const Home = () => {
         setIsLoadingLiked(true);
         const response = await recipeAPI.getLikedRecommendations();
         // 실제 응답 형식: { isSuccess, code, message, result: [...] } 또는 배열 직접 반환
-        const recipesData = Array.isArray(response.data) 
-          ? response.data 
-          : (response.data?.result || []);
+        const recipesData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.result || [];
         setLikedRecipes(recipesData);
       } catch (error) {
-        console.error('찜 기반 추천 레시피 로드 실패:', error);
+        console.error("찜 기반 추천 레시피 로드 실패:", error);
         setLikedRecipes([]);
       } finally {
         setIsLoadingLiked(false);
@@ -55,12 +55,12 @@ const Home = () => {
           keywords[Math.floor(Math.random() * keywords.length)];
         const response = await recipeAPI.searchRecipes(randomKeyword);
         // 실제 응답 형식: { isSuccess, code, message, result: [...] } 또는 배열 직접 반환
-        const recipesData = Array.isArray(response.data) 
-          ? response.data 
-          : (response.data?.result || []);
+        const recipesData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.result || [];
         setRandomRecipes(recipesData);
       } catch (error) {
-        console.error('랜덤 레시피 로드 실패:', error);
+        console.error("랜덤 레시피 로드 실패:", error);
         setRandomRecipes([]);
       } finally {
         setIsLoadingRandom(false);
@@ -102,4 +102,3 @@ const Home = () => {
 };
 
 export default Home;
-

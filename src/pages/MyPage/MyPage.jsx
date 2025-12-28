@@ -300,9 +300,15 @@ const MyPage = () => {
                       mainImage: imageUrl,
                       cookTime: favorite.cookTime,
                       difficulty: favorite.difficulty,
-                      isFavorite: true,
+                      isScrapped: favorite.isScrapped ?? favorite.scrapped ?? true, // 찜한 레시피이므로 기본값 true
+                      scrapped: favorite.scrapped ?? favorite.isScrapped ?? true,
+                      missingIngredients: favorite.missingIngredients,
                     }}
                     size="normal"
+                    onUnfavorite={(recipeId) => {
+                      // 찜하기 취소 시 목록에서 제거
+                      setFavorites((prev) => prev.filter((fav) => fav.recipeId !== recipeId));
+                    }}
                   />
                 );
               })}

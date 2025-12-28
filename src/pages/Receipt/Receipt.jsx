@@ -1,12 +1,66 @@
 // 천재민: 영수증 촬영 및 인식 페이지
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { fridgeAPI } from '../../api/fridge';
-import { FaCamera, FaImage, FaCheck, FaCloudUploadAlt } from 'react-icons/fa';
-import { HiX } from 'react-icons/hi';
+import { useState, useRef, useEffect } from "react";
+import { fridgeAPI } from "../../api/fridge";
+import { FaCamera, FaCloudUploadAlt } from "react-icons/fa";
+import { HiX } from "react-icons/hi";
+import ReceiptInformation from "./ReceiptInformation";
+
+// 로딩 애니메이션 컴포넌트
+const LoadingAnimation = () => {
+  const [currentIcon, setCurrentIcon] = useState(0);
+
+  const foodIcons = [
+    { emoji: "🍞", name: "빵" },
+    { emoji: "🥩", name: "고기" },
+    { emoji: "🍎", name: "과일" },
+    { emoji: "🥬", name: "채소" },
+    { emoji: "🥛", name: "우유" },
+    { emoji: "🧀", name: "치즈" },
+    { emoji: "🥚", name: "달걀" },
+    { emoji: "🍅", name: "토마토" },
+    { emoji: "🥕", name: "당근" },
+    { emoji: "🐟", name: "생선" },
+    { emoji: "🍗", name: "닭고기" },
+    { emoji: "🥔", name: "감자" },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIcon((prev) => (prev + 1) % foodIcons.length);
+    }, 250); // 0.25초마다 아이콘 변경
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 border-2 border-blue-200">
+      <div className="flex flex-col items-center gap-4">
+        {/* 식재료 아이콘 애니메이션 */}
+        <div className="relative w-24 h-24 flex items-center justify-center">
+          <div className="absolute inset-0 bg-white rounded-full shadow-lg animate-pulse"></div>
+          <span
+            className="relative text-6xl animate-bounce transition-all duration-300"
+            key={currentIcon}
+          >
+            {foodIcons[currentIcon].emoji}
+          </span>
+        </div>
+
+        {/* 텍스트 */}
+        <div className="text-center">
+          <p className="text-lg font-semibold text-gray-900 mb-1">
+            영수증 분석 중...
+          </p>
+          <p className="text-sm text-gray-600">
+            냉장고 상태와 유통기한을 분석해 최적의 보관 위치를 찾고 있어요.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Receipt = () => {
-  const navigate = useNavigate();
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [ocrResults, setOcrResults] = useState(null);
@@ -23,7 +77,7 @@ const Receipt = () => {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }, // 후면 카메라 우선
+        video: { facingMode: "environment" }, // 후면 카메라 우선
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -31,8 +85,8 @@ const Receipt = () => {
         setCameraMode(true);
       }
     } catch (err) {
-      console.error('카메라 접근 실패:', err);
-      setError('카메라 접근에 실패했습니다. 파일 업로드를 사용해주세요.');
+      console.error("카메라 접근 실패:", err);
+      setError("카메라 접근에 실패했습니다. 파일 업로드를 사용해주세요.");
     }
   };
 
@@ -51,27 +105,33 @@ const Receipt = () => {
   // 카메라로 촬영
   const capturePhoto = () => {
     if (videoRef.current) {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       ctx.drawImage(videoRef.current, 0, 0);
-      
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const file = new File([blob], 'receipt.jpg', { type: 'image/jpeg' });
-          setImage(file);
-          setImagePreview(URL.createObjectURL(blob));
-          stopCamera();
-        }
-      }, 'image/jpeg', 0.9);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const file = new File([blob], "receipt.jpg", {
+              type: "image/jpeg",
+            });
+            setImage(file);
+            setImagePreview(URL.createObjectURL(blob));
+            stopCamera();
+          }
+        },
+        "image/jpeg",
+        0.9
+      );
     }
   };
 
   // 파일 선택
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       setImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -92,7 +152,7 @@ const Receipt = () => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       setImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -105,7 +165,7 @@ const Receipt = () => {
     setOcrResults(null);
     setError(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -120,16 +180,11 @@ const Receipt = () => {
       const response = await fridgeAPI.recognizeReceipt(image);
       setOcrResults(response.data);
     } catch (err) {
-      console.error('OCR 인식 실패:', err);
-      setError('영수증 인식에 실패했습니다. 다시 시도해주세요.');
+      console.error("OCR 인식 실패:", err);
+      setError("영수증 인식에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // 확인 버튼 클릭 - 냉장고 페이지로 이동
-  const handleConfirm = () => {
-    navigate('/fridge');
   };
 
   // 컴포넌트 언마운트 시 카메라 정리
@@ -161,8 +216,8 @@ const Receipt = () => {
               onClick={() => fileInputRef.current?.click()}
               className={`relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 ${
                 isDragging
-                  ? 'border-slate-500 bg-slate-100 scale-105'
-                  : 'border-gray-300 bg-white hover:border-slate-400 hover:bg-gray-50'
+                  ? "border-slate-500 bg-slate-100 scale-105"
+                  : "border-gray-300 bg-white hover:border-slate-400 hover:bg-gray-50"
               }`}
             >
               <div className="flex flex-col items-center gap-4">
@@ -233,7 +288,7 @@ const Receipt = () => {
         )}
 
         {/* 이미지 미리보기 */}
-        {imagePreview && (
+        {imagePreview && !ocrResults && !isLoading && (
           <div className="mb-6">
             <div className="relative bg-gray-100 rounded-xl overflow-hidden">
               <img
@@ -249,17 +304,17 @@ const Receipt = () => {
               </button>
             </div>
 
-            {!ocrResults && (
-              <button
-                onClick={handleRecognize}
-                disabled={isLoading}
-                className="w-full mt-4 py-3 bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? '인식 중...' : '영수증 인식하기'}
-              </button>
-            )}
+            <button
+              onClick={handleRecognize}
+              className="w-full mt-4 py-3 bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
+            >
+              영수증 인식하기
+            </button>
           </div>
         )}
+
+        {/* 로딩 애니메이션 */}
+        {isLoading && <LoadingAnimation />}
 
         {/* 에러 메시지 */}
         {error && (
@@ -270,37 +325,13 @@ const Receipt = () => {
 
         {/* OCR 결과 */}
         {ocrResults && (
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              인식된 재료 목록
-            </h2>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              {ocrResults.items && ocrResults.items.length > 0 ? (
-                ocrResults.items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="bg-white p-4 rounded-lg border border-gray-200 flex items-center justify-between"
-                  >
-                    <p className="font-medium text-gray-900">{item.name}</p>
-                    <FaCheck className="text-green-500" />
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">
-                  인식된 재료가 없습니다.
-                </p>
-              )}
-            </div>
-
-            {/* 확인 버튼 */}
-            <button
-              onClick={handleConfirm}
-              className="w-full mt-6 py-4 bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
-            >
-              <FaCheck />
-              <span>냉장고에 추가하기</span>
-            </button>
-          </div>
+          <ReceiptInformation
+            ocrResults={ocrResults}
+            imagePreview={imagePreview}
+            onIngredientDelete={(ingredientId) => {
+              console.log("재료 삭제됨:", ingredientId);
+            }}
+          />
         )}
       </div>
     </div>
