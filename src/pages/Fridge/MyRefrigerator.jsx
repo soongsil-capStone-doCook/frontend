@@ -20,6 +20,7 @@ import {
   fridgeSlotPositions,
   defaultPosition,
 } from "../../config/fridgeSlotPositions";
+import { getFoodImageUrl } from "./foodNameMapping";
 
 const MyRefrigerator = () => {
   const { user } = useUserStore();
@@ -135,78 +136,98 @@ const MyRefrigerator = () => {
 
         {/* 재료 이미지들 - fridgeSlot에 따라 배치 */}
         {!isEmpty &&
-          items.map((item) => {
-            const position =
-              fridgeSlotPositions[item.fridgeSlot] || defaultPosition;
+          (() => {
+            // 같은 이름 + 같은 위치의 재료 그룹화
+            const groupedItems = items.reduce((acc, item) => {
+              const key = `${item.name}_${item.fridgeSlot}`;
+              if (!acc[key]) {
+                acc[key] = { ...item, count: 1 };
+              } else {
+                acc[key].count += 1;
+              }
+              return acc;
+            }, {});
 
-            // 같은 fridgeSlot을 가진 재료들의 인덱스 계산
-            const sameSlotItems = items.filter(
-              (i) => i.fridgeSlot === item.fridgeSlot
+            // 각 슬롯별로 재료 배치
+            const groupedBySlot = Object.values(groupedItems).reduce(
+              (acc, item) => {
+                if (!acc[item.fridgeSlot]) {
+                  acc[item.fridgeSlot] = [];
+                }
+                acc[item.fridgeSlot].push(item);
+                return acc;
+              },
+              {}
             );
-            const itemIndexInSlot = sameSlotItems.findIndex(
-              (i) => i.id === item.id
+
+            return Object.values(groupedBySlot).flatMap((slotItems) =>
+              slotItems.slice(0, 3).map((item, index) => {
+                const position =
+                  fridgeSlotPositions[item.fridgeSlot] || defaultPosition;
+
+                // left 값 계산: 기본 위치 + (인덱스 * 10%)
+                const baseLeft = parseFloat(position.left);
+                const adjustedLeft = baseLeft + index * 10;
+
+                // S3 이미지 URL 생성
+                const getImageUrl = () => {
+                  // 테스트용 이미지
+                  if (item.name === "계란_테스트") return testEgg;
+                  if (item.name === "우유_테스트") return testMilk;
+                  if (item.name === "고기_테스트") return testMeat;
+
+                  // S3 URL 생성 (foodNameMapping.js 사용)
+                  return getFoodImageUrl(item.name, item.imageUrl);
+                };
+                const imageUrl = getImageUrl();
+
+                const handleItemClick = () => {
+                  console.log("=== 재료 클릭 - 백엔드로 전송될 데이터 ===");
+                  console.log("선택된 재료:", item);
+
+                  // 해당 위치의 재료 목록 모달 열기
+                  setSelectedSlot(item.fridgeSlot);
+                  setIsSlotModalOpen(true);
+                };
+
+                // 문쪽 재료인지 확인
+                const isDoorShelf = item.fridgeSlot?.includes("DOOR_SHELF");
+
+                return (
+                  <div
+                    key={`${item.id}_${index}`}
+                    className={`absolute cursor-pointer transition-all ${
+                      isDoorShelf ? "z-10" : "z-20"
+                    }`}
+                    style={{
+                      top: position.top,
+                      left: `${adjustedLeft}%`,
+                      transform: isDoorShelf 
+                        ? "translate(-50%, -50%) scale(0.85)" 
+                        : "translate(-50%, -50%)",
+                      opacity: isDoorShelf ? 0.7 : 1,
+                      filter: isDoorShelf ? "brightness(0.9) blur(0.3px)" : "none",
+                    }}
+                    onClick={handleItemClick}
+                  >
+                    <div className="relative">
+                      <img
+                        src={imageUrl}
+                        alt={item.name}
+                        className="w-20 h-20 object-contain hover:opacity-80 transition-opacity"
+                        title={item.name}
+                      />
+                      {item.count > 1 && (
+                        <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+                          {item.count}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
             );
-
-            // 최대 2개까지만 UI에 렌더링 (인덱스 0, 1만 표시)
-            if (itemIndexInSlot > 1) {
-              return null; // 3번째부터는 UI에 렌더링하지 않음 -> 넘칠 우려 방지
-            }
-
-            // left 값 계산: 기본 위치 + (인덱스 * 10%)
-            const baseLeft = parseFloat(position.left);
-            const adjustedLeft = baseLeft + itemIndexInSlot * 12;
-
-            // 실제 백엔드 연동 시 item.imageUrl 사용, 현재는 이름에 따라 이미지 선택
-            const getImageUrl = () => {
-              if (item.imageUrl) return item.imageUrl;
-              if (item.name === "계란_테스트") return testEgg;
-              if (item.name === "우유_테스트") return testMilk;
-              if (item.name === "고기_테스트") return testMeat;
-              return testMilk; // 기본값
-            };
-            const imageUrl = getImageUrl();
-
-            const handleItemClick = () => {
-              console.log("=== 재료 클릭 - 백엔드로 전송될 데이터 ===");
-              console.log("선택된 재료:", item);
-
-              // PATCH 요청 데이터
-              console.log("\n[PATCH 요청]");
-              console.log("엔드포인트: PATCH /fridge/{ingredientId}");
-              console.log("Path Parameter:");
-              console.log(`  ingredientId: ${item.id}`);
-              console.log("Request Body:");
-              const patchData = {
-                id: item.id,
-                name: item.name,
-                quantity: item.quantity || null,
-                category: item.storageCategory || null,
-                expiryDate: item.expiryDate || null,
-                inputMethod: item.inputMethod || "MANUAL",
-              };
-              console.log("  ", patchData);
-
-              // 해당 위치의 재료 목록 모달 열기
-              setSelectedSlot(item.fridgeSlot);
-              setIsSlotModalOpen(true);
-            };
-
-            return (
-              <img
-                key={item.id}
-                src={imageUrl}
-                alt={item.name}
-                className="absolute w-12 h-12 object-contain z-20 cursor-pointer hover:opacity-80 transition-opacity"
-                style={{
-                  top: position.top,
-                  left: `${adjustedLeft}%`,
-                  transform: "translate(-50%, -50%)", // 중앙 정렬
-                }}
-                title={item.name} // 호버 시 이름 표시
-                onClick={handleItemClick}
-              />
-            );
-          })}
+          })()}
 
         {/* 빈 상태 메시지 */}
         {isEmpty && (
