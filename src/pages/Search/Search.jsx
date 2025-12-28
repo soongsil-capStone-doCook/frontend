@@ -129,7 +129,7 @@ const Search = () => {
       setRecipes(recipesData);
       setCurrentPage(1);
 
-      // URL 파라미터 제거 (냉장고 기반 검색은 키워드 검색이 아님)
+      // URL 파라미터 업데이트
       setSearchParams({});
     } catch (error) {
       console.error("냉장고 기반 검색 실패:", error);
