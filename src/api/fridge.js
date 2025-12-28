@@ -4,7 +4,7 @@ import axiosInstance from "./axiosInstance";
 export const fridgeAPI = {
   // 냉장고 재료 목록 조회
   getFridgeItems: () => {
-    return axiosInstance.get("/fridge");
+    return axiosInstance.patch("/fridge");
   },
 
   // 재료 수동 추가 (단일)
@@ -26,6 +26,7 @@ export const fridgeAPI = {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      timeout: 60000, // OCR은 시간이 오래 걸리므로 60초
     });
   },
 
