@@ -20,7 +20,15 @@ const Search = () => {
   const [recentSearches, setRecentSearches] = useState([]);
   const [profile, setProfile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [lastSearchType, setLastSearchType] = useState(null); // 'keyword' | 'fridge'
   const recipesPerPage = 6;
+
+  // 클라이언트 사이드 정렬 함수 (recipeId 기준)
+  const sortRecipes = (recipesArray, sortType) => {
+    const sorted = [...recipesArray];
+    // recipeId 기준 내림차순 (숫자가 클수록 최신)
+    return sorted.sort((a, b) => (b.recipeId || 0) - (a.recipeId || 0));
+  };
 
   // 최근 검색어 불러오기
   useEffect(() => {
@@ -111,17 +119,23 @@ const Search = () => {
     try {
       setIsLoading(true);
       setHasSearched(true);
-      
+
       console.log("=== 냉장고 기반 검색 API 호출 ===");
-      console.log("엔드포인트: GET /recipes/recommend/fridge, /recipes/recommend/fridge/missing");
+      console.log(
+        "엔드포인트: GET /recipes/recommend/fridge, /recipes/recommend/fridge/missing"
+      );
       console.log("excludeAllergy:", excludeAllergy);
       console.log("profile:", profile);
 
       // 알레르기 재료 제외 키워드 설정
-      if (excludeAllergy && profile?.allergies && profile.allergies.length > 0) {
-        const allergyKeywords = profile.allergies.map(allergen => ({
+      if (
+        excludeAllergy &&
+        profile?.allergies &&
+        profile.allergies.length > 0
+      ) {
+        const allergyKeywords = profile.allergies.map((allergen) => ({
           text: allergen,
-          type: "exclude"
+          type: "exclude",
         }));
         setKeywords(allergyKeywords);
       } else {
@@ -154,20 +168,27 @@ const Search = () => {
       console.log("합쳐진 레시피 데이터:", recipesData.length, "개");
 
       // 알레르기 재료 제외 필터링
-      if (excludeAllergy && profile?.allergies && profile.allergies.length > 0) {
+      if (
+        excludeAllergy &&
+        profile?.allergies &&
+        profile.allergies.length > 0
+      ) {
         console.log("=== 알레르기 재료 제외 필터링 (냉장고 검색) ===");
         console.log("알레르기 재료:", profile.allergies);
 
         recipesData = recipesData.filter((recipe) => {
           console.log("\n--- 레시피 검사:", recipe.title);
           console.log("recipe.ingredients:", recipe.ingredients);
-          
+
           // 재료 텍스트 변환 (객체 배열 → 문자열)
           const recipeIngredients = recipe.ingredients
             ? Array.isArray(recipe.ingredients)
               ? recipe.ingredients
                   .map((ing) => {
-                    const ingredientName = typeof ing === "object" && ing.name ? ing.name : String(ing);
+                    const ingredientName =
+                      typeof ing === "object" && ing.name
+                        ? ing.name
+                        : String(ing);
                     console.log("재료 추출:", ing, "->", ingredientName);
                     return ingredientName;
                   })
@@ -178,8 +199,9 @@ const Search = () => {
           console.log("변환된 재료 텍스트:", recipeIngredients);
 
           // 제외 검사 텍스트 (재료 + 제목 + 설명)
-          const excludeSearchText =
-            `${recipeIngredients} ${recipe.title || ""} ${recipe.description || ""}`.toLowerCase();
+          const excludeSearchText = `${recipeIngredients} ${
+            recipe.title || ""
+          } ${recipe.description || ""}`.toLowerCase();
 
           console.log("제외 검사 텍스트:", excludeSearchText);
 
@@ -204,8 +226,12 @@ const Search = () => {
         console.log("- profile?.allergies:", profile?.allergies);
       }
 
-      setRecipes(recipesData);
+      // 클라이언트 사이드 정렬 적용
+      const sortedRecipes = sortRecipes(recipesData, sortBy);
+      
+      setRecipes(sortedRecipes);
       setCurrentPage(1);
+      setLastSearchType('fridge');
 
       // URL 파라미터 업데이트
       setSearchParams({});
@@ -344,8 +370,12 @@ const Search = () => {
         });
       }
 
-      setRecipes(filteredRecipes);
+      // 클라이언트 사이드 정렬 적용
+      const sortedRecipes = sortRecipes(filteredRecipes, sortBy);
+
+      setRecipes(sortedRecipes);
       setCurrentPage(1); // 검색 시 첫 페이지로 리셋
+      setLastSearchType('keyword');
 
       // [임시] Mock API 대응: 검색 결과를 localStorage에 저장
       // TODO: 백엔드 API 완성 후 제거
@@ -439,10 +469,10 @@ const Search = () => {
     }
   };
 
-  // 정렬 변경 시 재검색
+  // 정렬 변경 시 재정렬 (recipeId 기준 최신순)
   useEffect(() => {
-    if (hasSearched && keywords.length > 0) {
-      handleSearch(keywords);
+    if (hasSearched && recipes.length > 0) {
+      setRecipes(prevRecipes => sortRecipes(prevRecipes, sortBy));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
@@ -586,8 +616,6 @@ const Search = () => {
                   className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-slate-500"
                 >
                   <option value="latest">최신순</option>
-                  <option value="rating">평점순</option>
-                  <option value="match">적합도순</option>
                 </select>
               </div>
             </div>
