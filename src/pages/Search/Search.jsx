@@ -111,20 +111,98 @@ const Search = () => {
     try {
       setIsLoading(true);
       setHasSearched(true);
-      setKeywords([]); // 키워드 초기화
+      
+      console.log("=== 냉장고 기반 검색 API 호출 ===");
+      console.log("엔드포인트: GET /recipes/recommend/fridge, /recipes/recommend/fridge/missing");
+      console.log("excludeAllergy:", excludeAllergy);
+      console.log("profile:", profile);
+
+      // 알레르기 재료 제외 키워드 설정
+      if (excludeAllergy && profile?.allergies && profile.allergies.length > 0) {
+        const allergyKeywords = profile.allergies.map(allergen => ({
+          text: allergen,
+          type: "exclude"
+        }));
+        setKeywords(allergyKeywords);
+      } else {
+        setKeywords([]); // 키워드 초기화
+      }
       setKeyword(""); // 입력창 초기화
 
-      console.log("=== 냉장고 기반 검색 API 호출 ===");
-      console.log("엔드포인트: GET /recipes/recommend/fridge/missing");
+      // 냉장고 기반 추천 API 두 개 모두 호출
+      const [fridgeResponse, missingResponse] = await Promise.all([
+        recipeAPI.getFridgeRecommendations(),
+        recipeAPI.getMissingRecommendations(),
+      ]);
 
-      const response = await recipeAPI.getMissingRecommendations();
-
-      console.log("응답 데이터:", response.data);
+      console.log("냉장고 추천 응답:", fridgeResponse.data);
+      console.log("부족한 재료 추천 응답:", missingResponse.data);
 
       // BaseResponse 형식: { isSuccess, code, message, result: [...] }
-      const recipesData = response.data?.result || [];
+      const fridgeRecipes = fridgeResponse.data?.result || [];
+      const missingRecipes = missingResponse.data?.result || [];
 
-      console.log("추출된 레시피 데이터:", recipesData);
+      // 두 API 결과 합치기 (중복 제거)
+      const recipeMap = new Map();
+      [...fridgeRecipes, ...missingRecipes].forEach((recipe) => {
+        if (!recipeMap.has(recipe.recipeId)) {
+          recipeMap.set(recipe.recipeId, recipe);
+        }
+      });
+
+      let recipesData = Array.from(recipeMap.values());
+      console.log("합쳐진 레시피 데이터:", recipesData.length, "개");
+
+      // 알레르기 재료 제외 필터링
+      if (excludeAllergy && profile?.allergies && profile.allergies.length > 0) {
+        console.log("=== 알레르기 재료 제외 필터링 (냉장고 검색) ===");
+        console.log("알레르기 재료:", profile.allergies);
+
+        recipesData = recipesData.filter((recipe) => {
+          console.log("\n--- 레시피 검사:", recipe.title);
+          console.log("recipe.ingredients:", recipe.ingredients);
+          
+          // 재료 텍스트 변환 (객체 배열 → 문자열)
+          const recipeIngredients = recipe.ingredients
+            ? Array.isArray(recipe.ingredients)
+              ? recipe.ingredients
+                  .map((ing) => {
+                    const ingredientName = typeof ing === "object" && ing.name ? ing.name : String(ing);
+                    console.log("재료 추출:", ing, "->", ingredientName);
+                    return ingredientName;
+                  })
+                  .join(" ")
+              : String(recipe.ingredients)
+            : "";
+
+          console.log("변환된 재료 텍스트:", recipeIngredients);
+
+          // 제외 검사 텍스트 (재료 + 제목 + 설명)
+          const excludeSearchText =
+            `${recipeIngredients} ${recipe.title || ""} ${recipe.description || ""}`.toLowerCase();
+
+          console.log("제외 검사 텍스트:", excludeSearchText);
+
+          // 알레르기 재료가 하나라도 포함되면 제외
+          const hasAllergyIngredient = profile.allergies.some((allergen) => {
+            const isMatch = excludeSearchText.includes(allergen.toLowerCase());
+            if (isMatch) {
+              console.log(`❌ 알레르기 재료 발견: ${allergen}`);
+            }
+            return isMatch;
+          });
+
+          const result = !hasAllergyIngredient;
+          console.log("필터링 결과:", result ? "✅ 통과" : "❌ 제외");
+          return result;
+        });
+
+        console.log("\n필터링 후 레시피 수:", recipesData.length);
+      } else {
+        console.log("알레르기 필터링 건너뜀:");
+        console.log("- excludeAllergy:", excludeAllergy);
+        console.log("- profile?.allergies:", profile?.allergies);
+      }
 
       setRecipes(recipesData);
       setCurrentPage(1);
