@@ -214,7 +214,7 @@ const MyRefrigerator = () => {
                       <img
                         src={imageUrl}
                         alt={item.name}
-                        className="w-20 h-20 object-contain hover:opacity-80 transition-opacity"
+                        className="w-24 h-24 object-contain hover:opacity-80 transition-opacity"
                         title={item.name}
                       />
                       {item.count > 1 && (
