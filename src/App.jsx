@@ -5,6 +5,7 @@ import PublicRoute from "./components/PublicRoute";
 import Home from "./pages/Home/Home";
 import Refrigerator from "./pages/Fridge/MyRefrigerator";
 import Receipt from "./pages/Receipt/Receipt";
+import ReceiptResult from "./pages/Receipt/ReceiptResult";
 import Search from "./pages/Search/Search";
 import MyPage from "./pages/MyPage/MyPage";
 import Login from "./pages/Login/Login";
@@ -17,6 +18,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
+
         {/* 로그인 필요 페이지 */}
         <Route
           index
@@ -84,6 +86,7 @@ function App() {
             </PublicRoute>
           }
         />
+
         <Route path="login/kakao/callback" element={<KakaoCallback />} />
       </Route>
     </Routes>
