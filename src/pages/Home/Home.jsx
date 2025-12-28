@@ -3,25 +3,25 @@ import { recipeAPI } from '../../api/recipe';
 import RecipeSwiper from '../../components/RecipeSwiper';
 import RecipeGrid from '../../components/RecipeGrid';
 
+// 랜덤 키워드 목록 (컴포넌트 외부로 이동)
+const keywords = [
+  '김치찌개',
+  '파스타',
+  '볶음밥',
+  '샐러드',
+  '스테이크',
+  '치킨',
+  '피자',
+  '라면',
+  '떡볶이',
+  '비빔밥',
+];
+
 const Home = () => {
   const [likedRecipes, setLikedRecipes] = useState([]);
   const [randomRecipes, setRandomRecipes] = useState([]);
   const [isLoadingLiked, setIsLoadingLiked] = useState(true);
   const [isLoadingRandom, setIsLoadingRandom] = useState(true);
-
-  // 랜덤 키워드 목록
-  const keywords = [
-    '김치찌개',
-    '파스타',
-    '볶음밥',
-    '샐러드',
-    '스테이크',
-    '치킨',
-    '피자',
-    '라면',
-    '떡볶이',
-    '비빔밥',
-  ];
 
   // 찜 기반 추천 레시피 가져오기
   useEffect(() => {
