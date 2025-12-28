@@ -50,9 +50,12 @@ const RecipeDetail = () => {
         const response = await recipeAPI.getRecipeDetail(recipeId);
         console.log("✅ API 응답:", response.data);
 
+        // 실제 응답 형식: { isSuccess, code, message, result: {...} }
+        const apiData = response.data?.result || response.data;
+
         // 병합 우선순위: 캐시(검색결과) > Mock(개발용) > API(기본)
         const mergedRecipe = {
-          ...response.data, // 기본: API 데이터
+          ...apiData, // 기본: API 데이터
           ...(mockData || {}), // Mock 덮어쓰기 (없으면 스킵)
           ...(cachedData || {}), // 캐시 덮어쓰기 (최우선)
         };
@@ -251,26 +254,35 @@ const RecipeDetail = () => {
               <span className="w-1 h-6 bg-slate-700 rounded-full"></span>
               조리 과정
             </h2>
-            <div className="space-y-4">
-              {recipe.steps.map((step, index) => (
-                <div key={index} className="flex gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-slate-700 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                    {step.order || index + 1}
+            <div className="space-y-6">
+              {recipe.steps.map((step, index) => {
+                const stepImage = step.image || step.imageUrl;
+                
+                return (
+                  <div key={index} className="flex gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-slate-700 text-white rounded-full flex items-center justify-center font-bold text-base shadow-md">
+                      {step.order || index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-800 leading-relaxed mb-3">
+                        {step.content || step.description || step}
+                      </p>
+                      {stepImage && (
+                        <div className="mt-3 rounded-xl overflow-hidden shadow-md bg-gray-100">
+                          <img
+                            src={stepImage}
+                            alt={`조리 단계 ${step.order || index + 1}`}
+                            className="w-full h-auto object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 pt-1">
-                    <p className="text-gray-800 leading-relaxed">
-                      {step.content || step.description || step}
-                    </p>
-                    {step.imageUrl && (
-                      <img
-                        src={step.imageUrl}
-                        alt={`조리 단계 ${step.order || index + 1}`}
-                        className="mt-3 rounded-lg w-full max-w-md"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
