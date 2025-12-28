@@ -226,25 +226,40 @@ const Search = () => {
       // 클라이언트 사이드 필터링 (Mock API 대응)
       let filteredRecipes = recipesWithMissing;
 
-      // 키워드가 레시피 제목, 설명, 재료에 포함되는지 확인
-      if (searchKeywords.length > 0) {
+      // 키워드 필터링 (포함 또는 제외 키워드가 있을 때)
+      if (includeKeywords.length > 0 || excludeKeywords.length > 0) {
         filteredRecipes = filteredRecipes.filter((recipe) => {
-          const searchText = `${recipe.title || ""} ${
-            recipe.description || ""
-          } ${
-            recipe.ingredients ? recipe.ingredients.join(" ") : ""
-          }`.toLowerCase();
+          // 재료 목록 추출 (객체 배열에서 name 필드 추출)
+          const recipeIngredients = recipe.ingredients
+            ? Array.isArray(recipe.ingredients)
+              ? recipe.ingredients
+                  .map((ing) =>
+                    typeof ing === "object" && ing.name ? ing.name : String(ing)
+                  )
+                  .join(" ")
+              : String(recipe.ingredients)
+            : "";
 
-          // 모든 포함 키워드가 포함되어야 함
+          // 포함 키워드는 제목+설명+재료 전체에서 검색
+          const searchTextForInclude = `${recipe.title || ""} ${
+            recipe.description || ""
+          } ${recipeIngredients}`.toLowerCase();
+
+          // 제외 키워드는 재료+제목+설명 모두에서 검사
+          const excludeSearchText = `${recipeIngredients} ${
+            recipe.title || ""
+          } ${recipe.description || ""}`.toLowerCase();
+
+          // 1. 포함 키워드 체크: 모든 포함 키워드가 포함되어야 함
           const hasAllIncludes =
             includeKeywords.length === 0 ||
             includeKeywords.every((kw) =>
-              searchText.includes(kw.toLowerCase())
+              searchTextForInclude.includes(kw.toLowerCase())
             );
 
-          // 제외 키워드가 하나라도 포함되면 제외
+          // 2. 제외 키워드 체크: 제외 키워드가 하나라도 포함되면 제외
           const hasAnyExcludes = excludeKeywords.some((kw) =>
-            searchText.includes(kw.toLowerCase())
+            excludeSearchText.includes(kw.toLowerCase())
           );
 
           return hasAllIncludes && !hasAnyExcludes;
