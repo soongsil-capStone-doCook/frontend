@@ -177,7 +177,7 @@ const RecipeCard = ({ recipe, size = "normal" }) => {
           <div className="mb-2">
             <div className="flex flex-wrap gap-1">
               {recipe.missingIngredients.slice(0, 3).map((ingredient, idx) => (
-                <span 
+                <span
                   key={idx}
                   className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full"
                 >
