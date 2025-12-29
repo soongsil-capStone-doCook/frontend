@@ -228,10 +228,10 @@ const Search = () => {
 
       // 클라이언트 사이드 정렬 적용
       const sortedRecipes = sortRecipes(recipesData, sortBy);
-      
+
       setRecipes(sortedRecipes);
       setCurrentPage(1);
-      setLastSearchType('fridge');
+      setLastSearchType("fridge");
 
       // URL 파라미터 업데이트
       setSearchParams({});
@@ -375,7 +375,7 @@ const Search = () => {
 
       setRecipes(sortedRecipes);
       setCurrentPage(1); // 검색 시 첫 페이지로 리셋
-      setLastSearchType('keyword');
+      setLastSearchType("keyword");
 
       // [임시] Mock API 대응: 검색 결과를 localStorage에 저장
       // TODO: 백엔드 API 완성 후 제거
@@ -472,7 +472,7 @@ const Search = () => {
   // 정렬 변경 시 재정렬 (recipeId 기준 최신순)
   useEffect(() => {
     if (hasSearched && recipes.length > 0) {
-      setRecipes(prevRecipes => sortRecipes(prevRecipes, sortBy));
+      setRecipes((prevRecipes) => sortRecipes(prevRecipes, sortBy));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
@@ -507,7 +507,7 @@ const Search = () => {
               <div className="text-left">
                 <div className="font-bold text-base">냉장고 재료로 검색</div>
                 <div className="text-xs text-gray-600">
-                  냉장고에 있는 재료로 만들 수 있는 레시피
+                  현재 가진 재료로 최고의 음식을 만들어 보세요
                 </div>
               </div>
             </div>
